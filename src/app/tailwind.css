@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('public/font/Roboto-Regular.ttf') format('ttf');
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'Nonserif';
+    src: url('public/font/Nonserif.ttf') format('ttf');
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  @layer base {
+    body {
+      @apply p-4 mx-auto font-body;
+    }
+  }
+  
+  @layer components {
+    .input {
+      @apply w-4/5 p-3 rounded-sm block my-4 text-center
+        focus:bg-lightblue focus:rounded-md focus:border-steelgrey focus:border-2;
+    }
+    .invalid-input {
+      @apply 
+    }
+    .submit-button {
+      @apply bg-darksteelgrey text-white p-3 m-2 rounded-lg text-sm outline-offset-8 outline-black drop-shadow-lg;
+    }
+    .button{
+      @apply bg-steelgrey outline-2 outline-darksteelgrey outline-offset-8 text-white p-3 m-2 rounded-lg text-sm;
+    }
+    .note-container {
+      @apply grid grid-cols-5 gap-2 justify-evenly;
+    }
+    .folder-item {
+      @apply max-w-sm min-h-7 m-2 p-2 border-2 border-steelgrey bg-pastelblue text-darksteelgrey rounded-xl text-center cursor-pointer;
+    }
+    .note-item {
+      @apply max-w-full min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;
+    }
+    .selected-note {
+      @apply bg-bluegrey ring ring-darksteelgrey;
+    }
+    .selected-folder {
+      @apply bg-darksteelgrey ring ring-white text-white;
+    }
+    .sort-option {
+      @apply p-2 ring m-1 rounded-sm ring-lightgrey
+        hover:ring-darksteelgrey;
+    }
+    .sort-option-selected {
+      @apply bg-steelgrey;
+    }
+    .modal-backdrop {
+      @apply fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50;
+    }
+    .modal-main {
+      @apply p-6 rounded-lg shadow-lg;
+    }
+  }
+  
+  @layer utilities {
+    
+  }
+  
