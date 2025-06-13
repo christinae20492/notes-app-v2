@@ -18,11 +18,14 @@
 
   @layer base {
     body {
-      @apply p-4 mx-auto font-body;
+      @apply p-4 mx-auto font-body text-notblack;
     }
   }
   
   @layer components {
+    .menu-icon {
+      @apply block p-3 scale-150 text-center my-7 text-royalBlue-800;
+    }
     .input {
       @apply w-4/5 p-3 rounded-sm block my-4 text-center
         focus:bg-lightblue focus:rounded-md focus:border-steelgrey focus:border-2;
@@ -31,7 +34,7 @@
       @apply 
     }
     .submit-button {
-      @apply bg-darksteelgrey text-white p-3 m-2 rounded-lg text-sm outline-offset-8 outline-black drop-shadow-lg;
+      @apply bg-royalBlue-900 text-white p-3 m-2 rounded-lg text-sm outline-offset-8 outline-black drop-shadow-lg;
     }
     .button{
       @apply bg-steelgrey outline-2 outline-darksteelgrey outline-offset-8 text-white p-3 m-2 rounded-lg text-sm;
@@ -40,7 +43,7 @@
       @apply grid grid-cols-5 gap-2 justify-evenly;
     }
     .folder-item {
-      @apply max-w-sm min-h-7 m-2 p-2 border-2 border-steelgrey bg-pastelblue text-darksteelgrey rounded-xl text-center cursor-pointer;
+      @apply max-w-sm min-h-7 m-2 p-2 border-2 border-steelgrey bg-royalBlue-100 text-darksteelgrey rounded-xl text-center cursor-pointer;
     }
     .note-item {
       @apply max-w-full min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;

@@ -269,7 +269,6 @@ export const togglePinNotes = (
 
 export const searchNotes = (query: string, folderId?: string): Note[] => {
   const notes = getNotesArray(folderId);
-  console.log(query);
 
   if (!query.trim()) {
     return notes;

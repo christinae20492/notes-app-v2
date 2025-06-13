@@ -11,6 +11,7 @@ export default {
       'white':'#ffffff',
       'black':'#000000',
       'vague':'#f7f7f7',
+      'notblack':'#080808',
 
       'lightblue':'#e4e6eb',
       'pastelblue':'#8bb4c9',
@@ -28,6 +29,15 @@ export default {
 
       'lightgrey':'#c9c9c9',
       'darkgrey':'#4f4f4f',
+
+      royalBlue: {
+        100: "#B3C8F5",
+        300: "#5F86E6",
+        default: "#2C5EDB",
+        700: "#2048A8",
+        800: "#162F75",
+        900: "#0F1F4D",
+      },
 
       emeraldGreen: {
         100: "#E6FAEE",

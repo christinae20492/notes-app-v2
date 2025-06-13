@@ -26,6 +26,7 @@ import { faCircleCheck, faShuffle, faThumbtack, faTrashCan } from "@fortawesome/
 import { Folder, Note } from "../app/utils/types";
 import { failToast } from "@/app/utils/toast";
 
+
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -135,18 +136,9 @@ export default function Index() {
   };
 
   return (
-    <>
+    <Layout>
       {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
-      <Layout
-        setIsMultiSelect={setIsMultiSelect}
-        isMultiSelect={isMultiSelect}
-        setSearchBar={setSearchBar}
-        searchBar={searchBar}
-        setOpenSorter={setOpenSorter}
-        setShowSettings={setShowSettings}
-        setRefresh={setRefresh}
-      >
         {searchBar && <SearchBar setNotes={setNotes} />}
 
         <div className="bg-lightgrey p-8 rounded-lg shadow-lg w-lg text-center">
@@ -281,7 +273,6 @@ export default function Index() {
           isInTrash={false}
           folderId={undefined}
         />
-      </Layout>
-    </>
+    </Layout>
   );
 }

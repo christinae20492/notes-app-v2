@@ -13,17 +13,17 @@ import {
   faUserGear,
 } from "@fortawesome/free-solid-svg-icons";
 import { ToastContainer, toast } from "react-toastify";
-import "@/app/tailwind.css"
+import "@/app/tailwind.css";
 
 interface LayoutProps {
   children: React.ReactNode;
-  setIsMultiSelect: (value: boolean) => void;
-  isMultiSelect: boolean;
-  setSearchBar: (value: boolean) => void;
-  searchBar: boolean;
-  setOpenSorter: (visible: boolean) => void;
-  setShowSettings: (visible: boolean) => void;
-  setRefresh: (value: boolean) => void;
+  setIsMultiSelect?: (value: boolean) => void;
+  isMultiSelect?: boolean;
+  setSearchBar?: (value: boolean) => void;
+  searchBar?: boolean;
+  setOpenSorter?: (visible: boolean) => void;
+  setShowSettings?: (visible: boolean) => void;
+  setRefresh?: (value: boolean) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({
         <aside className="bg-gray-200 w-24 flex flex-col items-center pt-3 fixed top-16 left-0 h-full shadow-md">
           <Link
             href="/createnote"
-            className="block p-3 scale-150 text-center my-7"
+            className="menu-icon"
           >
             <FontAwesomeIcon icon={faPlus} />
             <br />
@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({
           </Link>
 
           <div
-            className="block p-3 scale-150 text-center my-7 cursor-pointer"
+            className="menu-icon cursor-pointer"
             onClick={() => {
               setIsMultiSelect(!isMultiSelect);
             }}
@@ -69,19 +69,19 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
 
           <div
-            className="block p-3 scale-150 text-center my-7 cursor-pointer"
+            className="menu-icon cursor-pointer"
             onClick={() => {
               setSearchBar(!searchBar);
             }}
           >
             <FontAwesomeIcon icon={faMagnifyingGlass} />
             <br />
-            <span className="font-body text-xs text-darkgrey">Search</span>
+            <span className="font-body text-xs text-darkgrey">{searchBar ? "Close" : "Search"}</span>
           </div>
 
           <Link
             href="/trash"
-            className="block p-3 scale-150 text-center my-7"
+            className="menu-icon"
           >
             <FontAwesomeIcon icon={faTrashCan} />
             <br />
@@ -99,14 +99,14 @@ const Layout: React.FC<LayoutProps> = ({
             <FontAwesomeIcon icon={faArrowUpShortWide} />
           </div>
 
+            <Link
+            href={"/acc"}>
           <div
             className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-spin"
-            onClick={() => {
-              setShowSettings(true);
-            }}
           >
-            <FontAwesomeIcon icon={faRotate} />
+            <FontAwesomeIcon icon={faUserGear} />
           </div>
+</Link>
 
           <div
             className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-bounce"
@@ -114,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({
               setRefresh(true);
             }}
           >
-            <FontAwesomeIcon icon={faUserGear} />
+            <FontAwesomeIcon icon={faRotate} />
           </div>
         </div>
 
