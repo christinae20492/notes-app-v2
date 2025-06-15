@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ToastContainer, toast } from "react-toastify";
 import "@/app/tailwind.css";
+import { useSession, signIn } from "next-auth/react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,19 @@ const Layout: React.FC<LayoutProps> = ({
   setShowSettings,
   setRefresh,
 }) => {
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      signIn();
+    }
+  }, [status]);
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  if (status === 'authenticated') {
   return (
     <div className="flex flex-col h-screen w-screen">
       <header className="bg-gray-100 h-16 flex items-center justify-between p-5 shadow-sm">
@@ -125,6 +139,8 @@ const Layout: React.FC<LayoutProps> = ({
       </div>
     </div>
   );
+}
+return null;
 };
 
 export default Layout;

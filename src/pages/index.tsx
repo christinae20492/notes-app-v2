@@ -25,6 +25,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck, faShuffle, faThumbtack, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { Folder, Note } from "../app/utils/types";
 import { failToast } from "@/app/utils/toast";
+import SessionProviderWrapper from "@/app/components/session";
 
 
 export default function Index() {
@@ -136,6 +137,7 @@ export default function Index() {
   };
 
   return (
+    <SessionProviderWrapper>
     <Layout>
       {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
@@ -274,5 +276,6 @@ export default function Index() {
           folderId={undefined}
         />
     </Layout>
+    </SessionProviderWrapper>
   );
 }
