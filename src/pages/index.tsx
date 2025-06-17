@@ -26,6 +26,8 @@ import { faCircleCheck, faShuffle, faThumbtack, faTrashCan } from "@fortawesome/
 import { Folder, Note } from "../app/utils/types";
 import { failToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
+import { getAllNotes } from "@/app/utils/notesapi";
+import { useSession } from "next-auth/react";
 
 
 export default function Index() {
@@ -52,10 +54,25 @@ export default function Index() {
   const regularNotes = notes?.filter((note) => note.tag !== "important") || [];
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
+      const { data: session, status } = useSession();
+
+      useEffect(() => {
+    // If still loading session, do nothing yet
+    if (status === 'loading') return;
+
+    if (status === 'unauthenticated') {
+        router.push('/auth/login'); 
+        return;
+    }
+
+    // If authenticated, no redirect needed, proceed to render content
+  }, [status, router]);
 
   useEffect(() => {
+    if (status === 'authenticated') {
     fetchData();
-  }, []);
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
     if (!isMultiSelect) {
@@ -65,12 +82,22 @@ export default function Index() {
 
   const fetchData = async () => {
     setLoading(true);
-    const loadedNotes = await loadNotes();
+    const loadedNotes = await getAllNotes(session, status);
     const loadedFolders = await loadFolders();
+    if (loadedNotes && loadedFolders) {
     setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
     setFolders(Array.isArray(loadedFolders) ? loadedFolders : []);
     setLoading(false);
+    }
   };
+
+  useEffect(()=>{
+    if (refresh) {
+      console.log("refresh")
+      fetchData();
+      setRefresh(false);
+    }
+  },[refresh])
 
   const handleSaveNote = (updatedContent: any) => {
     const updatedNote = { ...currentNote, content: updatedContent };
@@ -138,7 +165,12 @@ export default function Index() {
 
   return (
     <SessionProviderWrapper>
-    <Layout>
+    <Layout
+    isMultiSelect={isMultiSelect}
+    setIsMultiSelect={setIsMultiSelect}
+    setRefresh={setRefresh}
+    searchBar={searchBar}
+    setSearchBar={setSearchBar}>
       {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
         {searchBar && <SearchBar setNotes={setNotes} />}

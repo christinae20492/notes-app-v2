@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "Account" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
     "type" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerAccountId" TEXT NOT NULL,
@@ -18,9 +18,9 @@ CREATE TABLE "Account" (
 
 -- CreateTable
 CREATE TABLE "Session" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "sessionToken" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" UUID NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
@@ -35,13 +35,42 @@ CREATE TABLE "VerificationToken" (
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Folder" (
+    "id" UUID NOT NULL,
+    "title" TEXT NOT NULL,
+    "dateCreated" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "dateUpdated" TIMESTAMP(3) NOT NULL,
+    "userId" UUID NOT NULL,
+
+    CONSTRAINT "Folder_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Note" (
+    "id" UUID NOT NULL,
+    "title" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "tag" TEXT NOT NULL,
+    "dateCreated" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "dateUpdated" TIMESTAMP(3) NOT NULL,
+    "dateDeleted" TIMESTAMP(3),
+    "isTrash" BOOLEAN NOT NULL DEFAULT false,
+    "userId" UUID NOT NULL,
+    "folder_id" UUID,
+
+    CONSTRAINT "Note_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -59,8 +88,26 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Folder_title_userId_key" ON "Folder"("title", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Note_title_userId_folder_id_key" ON "Note"("title", "userId", "folder_id");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Folder" ADD CONSTRAINT "Folder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Note" ADD CONSTRAINT "Note_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Note" ADD CONSTRAINT "Note_folder_id_fkey" FOREIGN KEY ("folder_id") REFERENCES "Folder"("id") ON DELETE SET NULL ON UPDATE CASCADE;

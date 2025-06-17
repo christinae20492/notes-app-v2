@@ -63,3 +63,5 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 
 /src/generated/prisma
+
+.vercel

@@ -15,8 +15,8 @@ datasource db {
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String 
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String @db.Uuid
   type              String  
   provider          String 
   providerAccountId String 
@@ -35,9 +35,9 @@ model Account {
 
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(uuid()) @db.Uuid
   sessionToken String   @unique 
-  userId       String   
+  userId       String   @db.Uuid
   expires      DateTime
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -53,34 +53,51 @@ model VerificationToken {
 
 model User {
 
-  id        String      @id @default(cuid())
+  id        String      @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now())
   email     String   @unique
-  username      String
+  username      String @unique
   password String
+  notes        Note[]
+  folders      Folder[]
 
-  Session Session[]
 
-  Account Account[]
+  session Session[]
+
+  account Account[]
 }
 
 model Folder {
-  id          String   @id @default(uuid())
-  title       String
-  dateCreated DateTime @default(now())
-  notes       Note[] 
+  id           String    @id @default(uuid()) @db.Uuid
+  title        String
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt 
+
+  userId       String    @db.Uuid 
+  user         User      @relation(fields: [userId], references: [id])
+
+  notes        Note[]   
+
+  @@unique([title, userId])
 }
 
 model Note {
-  id          String    @id @default(uuid())
-  title       String
-  body        String
-  color       String
-  category    String
-  tag         String
-  dateCreated DateTime  @default(now())
-  dateDeleted DateTime?
-  folderId    String?   @map("folder_id")
-  isTrash     Boolean   @default(false)
-  folder      Folder?   @relation(fields: [folderId], references: [id])
+  id           String    @id @default(uuid()) @db.Uuid
+  title        String
+  body         String
+  color        String
+  category     String
+  tag          String
+  dateCreated  DateTime  @default(now())
+  dateUpdated  DateTime  @updatedAt
+  dateDeleted  DateTime?
+  isTrash      Boolean   @default(false)
+
+  userId       String    @db.Uuid
+  user         User      @relation(fields: [userId], references: [id])
+
+  folderId     String?   @map("folder_id") @db.Uuid
+  folder       Folder?   @relation(fields: [folderId], references: [id])
+
+  @@unique([title, userId, folderId])
 }

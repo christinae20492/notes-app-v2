@@ -21,6 +21,7 @@ import { Folder, Note } from "../app/utils/types";
 import { faTrashCan, faMinus, faThumbtack, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { failToast } from "@/app/utils/toast";
+import SessionProviderWrapper from "@/app/components/session";
 
 export default function ViewFolder() {
   const router = useRouter();
@@ -209,7 +210,7 @@ const fetchAndFindFolder = async () => {
   }
 
   return (
-    <>
+    <SessionProviderWrapper>
       {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
       <Layout
         setIsMultiSelect={setIsMultiSelect}
@@ -362,6 +363,6 @@ const fetchAndFindFolder = async () => {
           folderId={typeof folderId === "string" ? folderId : undefined}
         />
       </Layout>
-    </>
+    </SessionProviderWrapper>
   );
 }

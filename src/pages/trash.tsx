@@ -16,6 +16,7 @@ import NoteItem from "@/app/components/notelogic";
 import { useRouter } from "next/router";
 import { faRectangleList, faTrashCan, faArrowRotateRight, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import SessionProviderWrapper from "@/app/components/session";
 
 export default function TrashPage() {
   const [trashNotes, setTrashNotes] = useState<Note[]>([]);
@@ -166,7 +167,7 @@ export default function TrashPage() {
   );
 
   return (
-    <>
+    <SessionProviderWrapper>
       {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
       <Layout
         setIsMultiSelect={setIsMultiSelect}
@@ -237,6 +238,6 @@ export default function TrashPage() {
           </div>
         )}
       </Layout>
-    </>
+    </SessionProviderWrapper>
   );
 }
