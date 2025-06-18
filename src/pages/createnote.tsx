@@ -30,6 +30,7 @@ export default function CreateNote() {
 
   const handleSaveNote = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(session)
 
     if (!title && !body) {
       setIsInvalid(true);
@@ -38,7 +39,7 @@ export default function CreateNote() {
     }
 
     createNewNote(title, body, color, category, session, status);
-    router.push("/");
+    //router.push("/");
   };
 
   return (

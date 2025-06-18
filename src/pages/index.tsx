@@ -24,10 +24,11 @@ import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck, faShuffle, faThumbtack, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { Folder, Note } from "../app/utils/types";
-import { failToast } from "@/app/utils/toast";
+import { failToast, warnToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
 import { getAllNotes } from "@/app/utils/notesapi";
 import { useSession } from "next-auth/react";
+import { getServerSideProps } from "@/app/middleware";
 
 
 export default function Index() {
@@ -56,23 +57,24 @@ export default function Index() {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
       const { data: session, status } = useSession();
 
-      useEffect(() => {
-    // If still loading session, do nothing yet
-    if (status === 'loading') return;
+       const sleep = (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
-    if (status === 'unauthenticated') {
-        router.push('/auth/login'); 
-        return;
-    }
+   useEffect(() => {
+    getServerSideProps;
+  if (status === "loading") return;
 
-    // If authenticated, no redirect needed, proceed to render content
-  }, [status, router]);
+  if (status === "unauthenticated") {
+    warnToast("unauthenticated")
+  }
+}, [status, router]);
 
   useEffect(() => {
     if (status === 'authenticated') {
     fetchData();
     }
-  }, [session, status, router]);
+  }, [status]);
 
   useEffect(() => {
     if (!isMultiSelect) {

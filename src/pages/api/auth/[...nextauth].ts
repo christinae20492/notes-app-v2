@@ -88,32 +88,46 @@ export const authOptions = {
       },
     }),
   ],
-  session: {
-    strategy: "jwt"
+ session: {
+    strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) { // Added account/profile for full context
       if (user) {
-        token.id = user.id; 
-        token.email = user.email;
+        token.id = user.id;
         token.username = (user as any).username;
+        token.email = user.email; // Ensure email is also on token
       }
+      console.log("CALLBACK: JWT Token after processing:", token); // <-- IMPORTANT LOG
       return token;
     },
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
+        session.user.email = token.email as string; // Ensure email is also on session
       }
+      console.log("CALLBACK: Session object after processing:", session); // <-- IMPORTANT LOG
       return session;
     },
   },
-  // You can define custom pages here for sign-in, error, etc.
   pages: {
-     signIn: "/auth/login", // Example: if you have a custom sign-in page at pages/auth/signin.tsx
-  //   error: "/auth/error", // Error code passed in query string as ?error=
-   },
-   secret: process.env.NEXTAUTH_SECRET,
+    signIn: "/auth/login",
+    error: "/auth/error",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false,
+        //secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https://'),
+      },
+    },
+  },
   debug: process.env.NODE_ENV === "development", // Debug mode (turn off in production)
 };
 

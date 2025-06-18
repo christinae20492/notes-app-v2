@@ -4,6 +4,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { successToast, failToast } from "@/app/utils/toast";
 import "@/app/tailwind.css";
+import { getServerSideProps } from "@/app/middleware";
 
 const SignInPage: React.FC = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -12,6 +13,11 @@ const SignInPage: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+
+  const sleep = (ms: number) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
    useEffect(() => {
     // If authentication status is loading, do nothing yet.
     if (status === 'loading') return;
@@ -19,10 +25,8 @@ const SignInPage: React.FC = () => {
     // If user is authenticated, redirect away from the login page.
     // This is the critical part to prevent staying on login after successful sign-in.
     if (status === 'authenticated') {
-      // You can redirect to the callbackUrl if it exists in router.query,
-      // otherwise default to the homepage.
       const callbackUrl = router.query.callbackUrl ? String(router.query.callbackUrl) : '/';
-      router.push(callbackUrl);
+      //router.push(callbackUrl);
       successToast("Successfully logged in!"); // Show success here on redirect away
     }
   }, [status, router]);
@@ -45,11 +49,12 @@ const SignInPage: React.FC = () => {
         callbackUrl: '/'
       });
 
-      if (result?.error) {
+      if (result.error) {
         failToast("Invalid credentials. Please try again.");
-      } else if (result?.ok) {
-        successToast("Signed in successfully!");
-        router.push(result.url || '/');
+      } else if (result.ok && session) {
+        await sleep(2000)
+        router.push("/");
+
       }
     } catch (error) {
       console.error("An unexpected error occurred during sign-in:", error);

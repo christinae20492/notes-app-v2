@@ -9,9 +9,10 @@ import { NextResponse } from "next/server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getSession({ req, res, authOptions: authOptions });
+        console.log(session)
 
   if (!session) {
-    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session).`);
+    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session). ${session}`);
         console.log(req.headers)
     return res.status(401).json({ message: 'Unauthorized: No active session.' });
   }
@@ -23,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   switch (req.method) {
+
     case 'GET':
       console.log(`API: User ${userId} is requesting all notes.`);
       try {
@@ -43,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     case 'POST':
       console.log(`API: User ${userId} is attempting to create a note.`);
-      const { title, body, color, category, tag, folderId } = req.body;
+      const { title, body, color, category, tag } = req.body;
 
       if (!title || !body) {
         return res.status(400).json({ message: 'Title and body are required.' });

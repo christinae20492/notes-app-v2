@@ -1,9 +1,9 @@
 import { SessionProvider } from "next-auth/react"; 
 import type { AppProps } from "next/app"; 
 
-function NotesApp({ Component, pageProps }: AppProps) {
+function NotesApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
-    <SessionProvider session={pageProps.session}>
+    <SessionProvider session={session}>
       <Component {...pageProps} />
     </SessionProvider>
   );
