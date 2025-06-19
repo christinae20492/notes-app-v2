@@ -41,7 +41,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
         style={{ backgroundColor: note.color }}
       ></div>
       <div>{note.title}</div>
-      {!isPinned && <div>{note.id}</div>}
+      {!isPinned && <div className="text-blue">{note.category}</div>}
     </div>
   );
 };

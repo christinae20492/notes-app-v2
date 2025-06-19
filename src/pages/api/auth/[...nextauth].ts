@@ -92,22 +92,20 @@ export const authOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, account, profile }) { // Added account/profile for full context
+    async jwt({ token, user, account, profile }) {
       if (user) {
         token.id = user.id;
         token.username = (user as any).username;
-        token.email = user.email; // Ensure email is also on token
+        token.email = user.email;
       }
-      console.log("CALLBACK: JWT Token after processing:", token); // <-- IMPORTANT LOG
       return token;
     },
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
-        session.user.email = token.email as string; // Ensure email is also on session
+        session.user.email = token.email as string;
       }
-      console.log("CALLBACK: Session object after processing:", session); // <-- IMPORTANT LOG
       return session;
     },
   },

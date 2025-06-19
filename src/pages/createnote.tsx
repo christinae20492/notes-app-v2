@@ -30,7 +30,6 @@ export default function CreateNote() {
 
   const handleSaveNote = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(session)
 
     if (!title && !body) {
       setIsInvalid(true);

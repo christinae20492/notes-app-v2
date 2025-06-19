@@ -3,16 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import prisma from "@/app/prisma";
 import { getSession } from "next-auth/react";
 import { authOptions } from "../auth/[...nextauth]";
-
-import { Note, NewNote } from "@/app/utils/types";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSession({ req, res, authOptions: authOptions });
-        console.log(session)
+  const session = await getServerSession( req, res, authOptions );
 
   if (!session) {
-    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session). ${session}`);
+    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session).`);
         console.log(req.headers)
     return res.status(401).json({ message: 'Unauthorized: No active session.' });
   }
@@ -60,7 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             color,
             category,
             tag: tag,
-            dateCreated: new Date(),
             userId: userId,
             folderId: null,
             isTrash: false,
