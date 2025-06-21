@@ -1,4 +1,3 @@
-
 import { KeyboardEvent, useEffect, useState } from "react";
 import {
   loadNotes,
@@ -7,7 +6,6 @@ import {
 } from "@/app/utils/noteutility";
 import {
   addNotesToFolder,
-  deleteFolder,
   loadFolders,
   removeNotesFromFolder,
   renameFolder,
@@ -18,10 +16,26 @@ import { MultiSelectCounter } from "@/app/components/ui/selectcounter";
 import NoteItem from "@/app/components/notelogic";
 import { useRouter } from "next/router";
 import { Folder, Note } from "../app/utils/types";
-import { faTrashCan, faMinus, faThumbtack, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrashCan,
+  faMinus,
+  faThumbtack,
+  faCircleCheck,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { failToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
+import {
+  addMultiToFolder,
+  deleteFolder,
+  getAllFolders,
+  getFolderNotes,
+  moveMultiFromFolder,
+} from "@/app/utils/folderapi";
+import React from "react";
+import { useSession } from "next-auth/react";
+import { getAllNotes, trashSelectedNotes, updateNote } from "@/app/utils/notesapi";
+import loading from "@/app/components/ui/loading";
 
 export default function ViewFolder() {
   const router = useRouter();
@@ -31,7 +45,7 @@ export default function ViewFolder() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [mainNotes, setMainNotes] = useState<Note[]>([]);
-   const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
 
   const [searchBar, setSearchBar] = useState(false);
@@ -44,51 +58,44 @@ export default function ViewFolder() {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [folderTitle, setFolderTitle] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
 
-  const pinnedNotes = notes.filter((note: Note) => note.tag === "important");
-  const normalNotes = notes.filter((note: Note) => note.tag !== "important");
+  const findAndFetchFolder = async () => {
+    if (status === "loading" || !folderId) {
+      return;
+    }
 
-  const fetchData = async () => {
-    const loadedFolders = await loadFolders();
+    const loadedFolders = await getAllFolders(session, status);
     const foldersArray = Array.isArray(loadedFolders) ? loadedFolders : [];
     setFolders(foldersArray);
-    return foldersArray;
-  };
+    const foundFolder = foldersArray.find((f) => f.id === folderId);
 
-  const fetchFolderNotes = async () => {
-    const folders = await loadFolders();
-    const currentFolder = folders.find(
-      (folder) => folder.id === folderId
-    );
-    setNotes(currentFolder?.notes || []);
+    if (!foundFolder) {
+      router.push("/");
+      failToast("Folder not found.");
+    } else {
+      setFolder(foundFolder);
+      setFolderTitle(foundFolder.title || "");
+
+      const filteredNotes = await getFolderNotes(
+        foundFolder.id,
+        session,
+        status
+      );
+      setNotes(Array.isArray(filteredNotes) ? filteredNotes : []);
+    }
   };
 
   const fetchNotes = async () => {
-    const loadedNotes = await loadNotes();
+    const loadedNotes = await getAllNotes(session, status);
     const notesArray = Array.isArray(loadedNotes) ? loadedNotes : [];
     setMainNotes(notesArray);
     return mainNotes;
   };
-const fetchAndFindFolder = async () => {
-      const loadedFolders = await fetchData();
-      const foundFolder = loadedFolders.find((f) => f.id === folderId);
-      console.log(folderId)
-      console.log(loadedFolders)
-      console.log(foundFolder)
-
-      if (!foundFolder) {
-        router.push("/");
-        failToast("Folder not found.");
-      } else {
-        setFolder(foundFolder);
-        setFolderTitle(foundFolder.title || "");
-        setNotes(foundFolder.notes || []);
-      }
-    };
-
 
   useEffect(() => {
-    fetchAndFindFolder();
+    findAndFetchFolder();
   }, [folderId, router]);
 
   useEffect(() => {
@@ -96,10 +103,24 @@ const fetchAndFindFolder = async () => {
   }, []);
 
   useEffect(() => {
+    if (refresh) {
+      getFolderNotes(folder.id, session, status)
+        .then((data) => setNotes(Array.isArray(data) ? data : []))
+        .catch((error) =>
+          console.error("Error refreshing folder notes:", error)
+        )
+        .finally(() => setRefresh(false));
+    }
+  }, [refresh]);
+
+  useEffect(() => {
     if (!isMultiSelect) {
       setSelectedNotes([]);
     }
   }, [isMultiSelect]);
+
+  const pinnedNotes = notes.filter((note: Note) => note.tag === "important");
+  const normalNotes = notes.filter((note: Note) => note.tag !== "important");
 
   const handleSelectAllNotes = (notesArray: Note[]) => {
     if (selectedNotes.length === notesArray.length) {
@@ -110,26 +131,32 @@ const fetchAndFindFolder = async () => {
   };
 
   const handleDeleteFolder = async (id: string) => {
-    if (!folder) return null;''
+    if (!folder) return null;
+    ("");
     if (window.confirm("Are you sure you want to delete this folder?")) {
-      await deleteFolder(id, setFolders, setNotes);
-      setNotes((prevNotes) => [...prevNotes, ...folder.notes]);
+      setLoading(true);
+      if (notes.length > 0) {
+        setSelectedNotes(notes.map((note: Note) => note.id));
+        await moveMultiFromFolder(selectedNotes, folder.id, session, status);
+        setSelectedNotes([]);
+      }
+      await deleteFolder(id, session, status);
+      setLoading(false);
       router.push("/");
     }
   };
 
-  const handleSaveNote = (updatedContent: any) => {
-    const updatedNote = { ...currentNote, content: updatedContent };
-    console.log("Updated note:", updatedNote);
+  const handleSaveNote = async (updatedContent: any) => {
+    await updateNote(currentNote?.id, updatedContent, session, status)
     setModalOpen(false);
   };
 
   const handleAddNotes = async () => {
     if (!folder) return null;
-    await addNotesToFolder(selectedNotes, folder.id, setNotes, setFolders);
+    await addMultiToFolder(selectedNotes, folder.id, session, status);
     setNoteModalVisible(false);
     setSelectedNotes([]);
-    fetchFolderNotes();
+    getFolderNotes(folder.id, session, status);
   };
 
   const handleRenameFolder = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -143,25 +170,21 @@ const fetchAndFindFolder = async () => {
       renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
     }
   };
-  
+
   const handleRenameFolderBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     if (typeof folderId === "string") {
       renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
     }
   };
-  
 
   const handleMoveToTrash = () => {
     if (!folder) return null;
-    const folderNotes = folder.notes.filter(
-      (note: Note) => !selectedNotes.includes(note.id)
-    );
 
-    moveMultipleNotesToTrash(selectedNotes, setNotes, folder.id );
+    trashSelectedNotes(selectedNotes, session, status);
 
-    setFolder({ ...folder, notes: folderNotes });
     setSelectedNotes([]);
-    fetchFolderNotes();
+    getFolderNotes(folder.id, session, status)
+    .then((data) => setNotes(Array.isArray(data) ? data : []))
   };
 
   const handleTogglePinNotes = () => {
@@ -173,14 +196,10 @@ const fetchAndFindFolder = async () => {
 
   const handleRemoveNotes = async () => {
     if (!folder) return null;
-    await removeNotesFromFolder(
-      selectedNotes,
-      folder.id,
-      setNotes,
-      setFolders
-    );
+    await moveMultiFromFolder(selectedNotes, folder.id, session, status);
     setSelectedNotes([]);
-    fetchFolderNotes();
+    getFolderNotes(folder.id, session, status)
+    .then((data) => setNotes(Array.isArray(data) ? data : []))
     router.push("/");
   };
 
@@ -205,8 +224,8 @@ const fetchAndFindFolder = async () => {
     });
   };
 
-  if (!folder) {
-    return <div>Loading...</div>;
+  if (!folder || loading) {
+    return <div>{loading}</div>;
   }
 
   return (
@@ -217,8 +236,6 @@ const fetchAndFindFolder = async () => {
         isMultiSelect={isMultiSelect}
         setSearchBar={setSearchBar}
         searchBar={searchBar}
-        setOpenSorter={setOpenSorter}
-        setShowSettings={setShowSettings}
         setRefresh={setRefresh}
       >
         <div className="bg-white top-28 left-24 h-12 w-[calc(100%-6rem)] fixed p-3 text-center shadow-md">
@@ -332,13 +349,13 @@ const fetchAndFindFolder = async () => {
         {isMultiSelect && (
           <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
             <button className="mx-3 scale-150" onClick={handleMoveToTrash}>
-            <FontAwesomeIcon icon={faTrashCan} />
+              <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <button className="mx-3 scale-150" onClick={handleRemoveNotes}>
-            <FontAwesomeIcon icon={faMinus} />
+              <FontAwesomeIcon icon={faMinus} />
             </button>
             <button className="mx-3 scale-150" onClick={handleTogglePinNotes}>
-            <FontAwesomeIcon icon={faThumbtack} />
+              <FontAwesomeIcon icon={faThumbtack} />
             </button>
             <button
               className={`mx-3 scale-150 ${
@@ -356,8 +373,6 @@ const fetchAndFindFolder = async () => {
           note={currentNote}
           onClose={() => setModalOpen(false)}
           onSaveNote={handleSaveNote}
-          setNotes={setNotes}
-          setFolders={setFolders}
           isInFolder={true}
           isInTrash={false}
           folderId={typeof folderId === "string" ? folderId : undefined}

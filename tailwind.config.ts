@@ -30,6 +30,36 @@ export default {
       'lightgrey':'#c9c9c9',
       'darkgrey':'#4f4f4f',
 
+  'off-white': '#f7f7f7',
+
+  'deep-black': '#080808',
+
+  'sky-blue': '#e4e6eb',
+  'cloud-blue': '#d5d7de',
+  'pastel-blue': '#8bb4c9',
+  'ocean-blue': '#2c5edb',
+  'navy-blue': '#204ab0',
+  'slate-grey': '#b6c1d4',
+  'steel-grey': '#5e6673',
+  'iron-grey': '#424853',
+  'charcoal-grey': '#202b3d',
+
+  'sunset-red': '#e34653',
+  'crimson-red': '#cc3e47',
+  'rose-pink': '#ffc7d1',
+  'blush-pink': '#ffe0e5',
+
+  'lavender-haze': '#54567d',
+  'violet-haze': '#454668',
+  'deep-cerulean': '#22266b',
+  'midnight-blue': '#1a1d52',
+  'abyss-blue': '#090b24',
+
+  'light-grey': '#c9c9c9',
+  'stone-grey': '#aeaeae',
+  'dark-grey': '#4f4f4f',
+  'shadow-grey': '#3b3b3b',
+
       royalBlue: {
         100: "#B3C8F5",
         300: "#5F86E6",

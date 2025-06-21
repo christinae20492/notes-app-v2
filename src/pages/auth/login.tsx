@@ -13,22 +13,12 @@ const SignInPage: React.FC = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-
   const sleep = (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
 
-   useEffect(() => {
-    // If authentication status is loading, do nothing yet.
-    if (status === 'loading') return;
-
-    // If user is authenticated, redirect away from the login page.
-    // This is the critical part to prevent staying on login after successful sign-in.
-    if (status === 'authenticated') {
-      const callbackUrl = router.query.callbackUrl ? String(router.query.callbackUrl) : '/';
-      //router.push(callbackUrl);
-      successToast("Successfully logged in!"); // Show success here on redirect away
-    }
+  useEffect(() => {
+    if (status === "loading") return;
   }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,15 +36,14 @@ const SignInPage: React.FC = () => {
         redirect: false,
         usernameOrEmail,
         password,
-        callbackUrl: '/'
+        callbackUrl: "/",
       });
 
       if (result.error) {
         failToast("Invalid credentials. Please try again.");
-      } else if (result.ok && session) {
-        await sleep(2000)
+      } else if (result.ok) {
         router.push("/");
-
+        successToast("Welcome back, " + session.user.username);
       }
     } catch (error) {
       console.error("An unexpected error occurred during sign-in:", error);
@@ -77,7 +66,9 @@ const SignInPage: React.FC = () => {
         </div>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="username-email" className="sr-only">Username or Email</label>
+            <label htmlFor="username-email" className="sr-only">
+              Username or Email
+            </label>
             <input
               id="username-email"
               name="username-email"
@@ -91,7 +82,9 @@ const SignInPage: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="password" className="sr-only">Password</label>
+            <label htmlFor="password" className="sr-only">
+              Password
+            </label>
             <input
               id="password"
               name="password"
@@ -116,7 +109,10 @@ const SignInPage: React.FC = () => {
 
         <div className="text-center text-sm text-gray-600">
           Don't have an account?{" "}
-          <Link href="register" className="font-medium text-royalBlue-700 hover:text-royalBlue-800 hover:underline transition duration-200">
+          <Link
+            href="register"
+            className="font-medium text-royalBlue-700 hover:text-royalBlue-800 hover:underline transition duration-200"
+          >
             Register here
           </Link>
         </div>

@@ -1,111 +1,114 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/app/prisma';
-import { authOptions } from '../../auth/[...nextauth]';
-import { getSession } from 'next-auth/react';
-
-import { Note, EditNote } from '@/app/utils/types';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/[...nextauth]';
+import prisma from '@/app/prisma';
+import { Note, EditNote } from '@/app/utils/types'; 
 
-interface ItemParams {
-  params: {
-    id: string;
-  };
-}
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { id } = req.query;
 
+  const noteId = Array.isArray(id) ? id[0] : id;
 
-  export async function GET(req: NextApiRequest, res: NextApiResponse, {params}: ItemParams) {
-
-  const session = await getSession({ req, res, authOptions: authOptions });
-  const userid = session?.user.id
-
-    if (!session) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  if (!noteId) {
+    return res.status(400).json({ message: 'Note ID is required.' });
   }
 
-  const { id } = params;
+  const session = await getServerSession(req, res, authOptions);
 
-  try {
-    const note: Note = await prisma.note.findUnique({
-      where: {
-        id: id,
-        userId: userid,
-      },
-    });
-
-    if (!note) {
-      return NextResponse.json({ message: 'Note not found.' }, { status: 404 });
-    }
-
-    return NextResponse.json(note, { status: 200 });
-  } catch (error) {
-    console.error(`Error fetching meals with ID ${id}:`, error);
-    return NextResponse.json({ message: 'Failed to fetch meal.' }, { status: 500 });
-  }
-
-  }
-
-  export async function PATCH(request: Request, { params }: ItemParams) {
-  if (!session || !session.user || !session.user.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { id } = params;
-
-  try {
-
-    const body: EditMeals = await request.json();
-     if (Object.keys(body).length === 0) {
-      return NextResponse.json({ message: 'No fields provided for update.' }, { status: 400 });
-    }
-
-    const meal: EditMeals | null = await prisma.ingredient.update({
-      where: {
-        id: id,
-        userId: userid,
-      },
-      data: {
-        ...(body.date !== undefined && { name: body.date }),
-        ...(body.breakfast !== undefined && { breakfast: (body.breakfast) }),
-        ...(body.lunch !== undefined && { lunch: (body.lunch) }),
-        ...(body.dinner !== undefined && { dinner: (body.dinner) }),
-        ...(body.snacks !== undefined && { snacks: (body.snacks) }),
-      }
-    });
-
-    return NextResponse.json(meal, { status: 200 });
-  } catch (error) {
-    console.error(`Error fetching meal with ID ${id}:`, error);
-    return NextResponse.json({ message: 'Failed to fetch meal.' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request, { params }: ItemParams) {
-  const session = await auth();
   if (!session) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    console.warn(`API: Unauthorized attempt to ${req.method} note (no session). Note ID: ${noteId}`);
+    return res.status(401).json({ message: 'Unauthorized: No active session.' });
   }
 
-  const { id } = params;
+  const userId = session.user.id;
+  if (!userId) {
+    console.error("API: User ID not found in session for authenticated user.");
+    return res.status(400).json({ message: 'User ID missing from session.' });
+  }
 
-  try {
-    const existingMeal = await prisma.existingMeal.findUnique({
-      where: {
-        id: id,
-        userId: userid,
-      },
-    });
+  switch (req.method) {
+    case 'GET':
+      console.log(`API: User ${userId} is requesting note with ID: ${noteId}`);
+      try {
+        const note = await prisma.note.findUnique({
+          where: {
+            id: noteId,
+            userId: userId,
+          },
+        });
 
-    if (!existingMeal) {
-      return NextResponse.json({ message: 'Meal not found.' }, { status: 404 });
-    }
+        if (!note) {
+          return res.status(404).json({ message: 'Note not found or you do not have access.' });
+        }
 
-    await prisma.existingMeal.delete({
-      where: { id },
-    });
+        return res.status(200).json(note);
+      } catch (error) {
+        console.error(`API: Error fetching note ${noteId}:`, error);
+        return res.status(500).json({ message: 'Internal server error while fetching note.' });
+      }
 
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    console.error(`Error deleting meal with ID ${id}:`, error);
-    return NextResponse.json({ message: 'Failed to delete meal.' }, { status: 500 });
+    case 'PATCH':
+      console.log(`API: User ${userId} is attempting to update note with ID: ${noteId}`);
+      const updateData: EditNote = req.body;
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: 'No fields provided for update.' });
+      }
+
+      try {
+        const updatedNote = await prisma.note.update({
+          where: {
+            id: noteId,
+            userId: userId,
+          },
+          data: {
+            ...updateData,
+            dateUpdated: new Date(),
+          },
+        });
+
+        return res.status(200).json({ message: 'Note updated successfully!', note: updatedNote });
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          return res.status(404).json({ message: 'Note not found or you do not have access to update.' });
+        }
+        console.error(`API: Error updating note ${noteId}:`, error);
+        return res.status(500).json({ message: 'Internal server error while updating note.' });
+      }
+
+    case 'DELETE':
+      console.log(`API: User ${userId} is attempting to PERMANENTLY DELETE note with ID: ${noteId}`);
+      try {
+        const noteToDelete = await prisma.note.findUnique({
+            where: {
+                id: noteId,
+                userId: userId,
+                isTrash: true,
+            }
+        });
+
+        if (!noteToDelete) {
+            return res.status(404).json({ message: 'Note not found or you do not have access to delete.' });
+        }
+
+        await prisma.note.delete({
+          where: {
+            id: noteId,
+            userId: userId,
+          },
+        });
+
+        return res.status(200).json({ message: 'Note permanently deleted successfully!' });
+      } catch (error: any) {
+        if (error.code === 'P2025') {
+          return res.status(404).json({ message: 'Note not found or you do not have access to delete.' });
+        }
+        console.error(`API: Error permanently deleting note ${noteId}:`, error);
+        return res.status(500).json({ message: 'Internal server error while permanently deleting note.' });
+      }
+
+    default:
+      res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
+      return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 }

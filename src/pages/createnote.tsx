@@ -38,7 +38,7 @@ export default function CreateNote() {
     }
 
     createNewNote(title, body, color, category, session, status);
-    //router.push("/");
+    router.push("/");
   };
 
   return (

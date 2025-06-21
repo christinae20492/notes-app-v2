@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  restoreNote,
-  permanentlyDeleteNote,
-  restoreMultipleNotes,
-  deleteMultipleNotes,
-  loadTrash,
-} from "../app/utils/noteutility";
 import Layout from "@/app/components/ui/layout";
 import { MultiSelectCounter } from "@/app/components/ui/selectcounter";
-import { getTrash, saveTrash } from "@/app/utils/localStorage";
 import { Note } from "@/app/utils/types";
 import { failToast, warnToast } from "@/app/utils/toast";
 import { NoteModal } from "@/app/components/notemodal";
@@ -17,6 +9,9 @@ import { useRouter } from "next/router";
 import { faRectangleList, faTrashCan, faArrowRotateRight, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import SessionProviderWrapper from "@/app/components/session";
+import { deleteNote, deleteSelectedNotes, getTrashNotes, restoreNoteFromTrash, restoreSelectedNotes } from "@/app/utils/notesapi";
+import { useSession } from "next-auth/react";
+import { getFolderNotes } from "@/app/utils/folderapi";
 
 export default function TrashPage() {
   const [trashNotes, setTrashNotes] = useState<Note[]>([]);
@@ -33,6 +28,8 @@ export default function TrashPage() {
   const [refresh, setRefresh] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     removeExpiredNotes();
@@ -48,9 +45,22 @@ export default function TrashPage() {
     }
   }, [isMultiSelect]);
 
+    useEffect(() => {
+    if (refresh) {
+      getTrashNotes(session, status)
+        .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
+        .catch((error) =>
+          console.error("Error refreshing folder notes:", error)
+        )
+        .finally(() => setRefresh(false));
+    }
+  }, [refresh]);
+
   const fetchData = async () => {
-    const loadedNotes = await loadTrash();
-    setTrashNotes(loadedNotes);
+    setLoading(true);
+    getTrashNotes(session, status)
+      .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
+    setLoading(false);
   };
 
   const handleSelectAllNotes = (notesArray: Note[]) => {
@@ -61,40 +71,35 @@ export default function TrashPage() {
     }
   };
 
-  const handleRestore = (id: string) => {
+  const handleRestore = async (id: string) => {
     if (selectedNote) {
-      restoreNote(id, setTrashNotes);
+     await  restoreNoteFromTrash(selectedNote.id, session, status);
       setIsOptionsModalVisible(false);
+      getTrashNotes(session, status)
+      .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
     }
   };
 
-  const handlePermanentDelete = () => {
+  const handlePermanentDelete = async () => {
     if (!selectedNote) return null;
-      permanentlyDeleteNote(selectedNote.id);
-      setIsDeleteConfirmVisible(false);
-      setIsOptionsModalVisible(false);
-    router.push('/trash')
+      await deleteNote(selectedNote.id, session, status)
+      getTrashNotes(session, status)
+      .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
   };
 
-  const handleDeleteSelectedNotes = () => {
+  const handleDeleteSelectedNotes = async () => {
     if (selectedNotes.length === 0) {
       alert("Please select notes to delete.");
       return;
     }
-    deleteMultipleNotes(selectedNotes, setTrashNotes);
+    await deleteSelectedNotes(selectedNotes, session, status)
     setSelectedNotes([]);
+    getTrashNotes(session, status)
+      .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
   };
 
-  const handleRestoreSelectedNotes = () => {
-    if (selectedNotes.length === 0) {
-      alert("Please select notes to restore.");
-      return;
-    }
-    restoreMultipleNotes(
-      selectedNotes,
-      setTrashNotes,
-      () => {},
-    );
+  const handleRestoreSelectedNotes = async() => {
+    await restoreSelectedNotes(selectedNotes)
     setSelectedNotes([]);
     router.push("/");
   };
@@ -107,14 +112,14 @@ export default function TrashPage() {
           : [...prev, note.id];
       });
     } else {
-      handleNoteClick(note);
+      setCurrentNote(note);
+      setModalOpen(true);
     }
   };
 
-  const removeExpiredNotes = (): void => {
+  const removeExpiredNotes = async (): Promise<void> => {
     try {
-      const trashNotes = getTrash();
-      const nonExpiredNotes: Note[] = [];
+      const expiredNotes: Note[] = [];
       const now = Date.now();
 
       trashNotes.forEach((note) => {
@@ -127,13 +132,16 @@ export default function TrashPage() {
           );
         }
 
-        if (ageInDays < 7) {
-          nonExpiredNotes.push(note);
+        if (ageInDays > 6) {
+          expiredNotes.push(note);
         }
       });
 
-      if (nonExpiredNotes.length !== trashNotes.length) {
-        saveTrash(nonExpiredNotes);
+      if (expiredNotes.length !== trashNotes.length) {
+        const idsToDelete = (expiredNotes.map((note: Note) => note.id))
+        deleteSelectedNotes(idsToDelete, session, status);
+        getTrashNotes(session, status)
+      .then((data) => setTrashNotes(Array.isArray(data) ? data : []))
       }
     } catch (error) {
       failToast(`Failed to remove expired notes: ${error}`);
@@ -165,6 +173,8 @@ export default function TrashPage() {
       <div>{note.id}</div>
     </div>
   );
+
+ 
 
   return (
     <SessionProviderWrapper>
@@ -205,7 +215,6 @@ export default function TrashPage() {
           isOpen={isModalOpen}
           note={currentNote}
           onClose={() => setModalOpen(false)}
-          setTrashNotes={setTrashNotes}
           isInFolder={false}
           isInTrash={true}
           folderId={undefined}

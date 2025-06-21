@@ -1,24 +1,23 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
-import { removeNoteFromFolder } from "@/app/utils/folderutil";
+import { useRouter } from "next/router";
+import { Note } from "../utils/types";
 import {
   copyNote,
   deleteNote,
-  permanentlyDeleteNote,
-  restoreNote,
-} from "@/app/utils/noteutility";
-import { useRouter } from "next/router";
-import { Note } from "../utils/types";
+  getAllNotes,
+  restoreNoteFromTrash,
+  sendNoteToTrash,
+} from "../utils/notesapi";
+import { useSession } from "next-auth/react";
+import { removeFromFolder } from "../utils/folderapi";
 
 interface NoteModalProps {
   isOpen: boolean;
   note: any;
   onClose: () => void;
   onSaveNote?: (updatedContent: string) => void;
-  setNotes?: React.Dispatch<React.SetStateAction<any[]>>;
-  setFolders?: React.Dispatch<React.SetStateAction<any[]>>;
-  setTrashNotes?: React.Dispatch<React.SetStateAction<any[]>>;
   isInFolder: boolean;
   isInTrash: boolean;
   folderId?: string;
@@ -29,15 +28,13 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   note,
   onClose,
   onSaveNote,
-  setNotes,
-  setFolders,
-  setTrashNotes,
   isInFolder,
   isInTrash,
   folderId,
 }) => {
   const [updatedNote, setUpdatedNote] = useState(note);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (note) {
@@ -45,51 +42,47 @@ export const NoteModal: React.FC<NoteModalProps> = ({
     }
   }, [note]);
 
-  const handleDeleteNote = () => {
-    if (note?.id && setNotes ) {
-      if (isInFolder) {
-        deleteNote(note.id, setNotes, folderId);
-      } else if (isInTrash) {
-        permanentlyDeleteNote(note.id);
-      } else {
-        deleteNote(note.id, setNotes);
+  const handleDeleteNote = async () => {
+    if (!isInTrash) {
+      await sendNoteToTrash(note.id, session, status);
+    } else {
+      if (
+        !window.confirm(
+          `Are you sure you want to permanently delete this note?`
+        )
+      ) {
+        return;
       }
-      onClose();
+      await deleteNote(note.id, session, status);
     }
+
+    onClose();
+    getAllNotes(session, status);
   };
 
-  const handleRestoreNote = () => {
-    if (!setTrashNotes) return null;
-    restoreNote(note.id, setTrashNotes);
+  const handleRestoreNote = async () => {
+    await restoreNoteFromTrash(note.id, session, status);
     router.push("/");
   };
 
-  const handleCopyNote = () => {
-    if (!setNotes) return null;
-    if (isInFolder) {
-      copyNote(note.id, setNotes, folderId);
-      onClose();
-    } else {
-      copyNote(note.id, setNotes);
-      onClose();
-    }
+  const handleCopyNote = async () => {
+    await copyNote(note, session, status);
+    onClose();
+    getAllNotes(session, status);
   };
 
-  const handleMoveNote = () => {
-
-    if (!setFolders || !setNotes) return null;
-
+  const handleMoveNote = async () => {
     if (!folderId) {
       console.error("Invalid folder id.");
       return;
     }
 
-    removeNoteFromFolder(note.id, folderId, setFolders, setNotes);
-    router.push('/')
+    await removeFromFolder(note.id, folderId, session, status);
     onClose();
+    router.push("/");
   };
 
-if (!isOpen) return null;
+  if (!isOpen) return null;
   if (!onSaveNote) return null;
 
   return (

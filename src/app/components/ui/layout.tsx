@@ -12,9 +12,9 @@ import {
   faTrashCan,
   faUserGear,
 } from "@fortawesome/free-solid-svg-icons";
-import { ToastContainer, toast } from "react-toastify";
 import "@/app/tailwind.css";
 import { useSession, signIn } from "next-auth/react";
+import loading from "./loading";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({
   }, [status]);
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <div>{loading()}</div>;
   }
 
   if (status === "authenticated") {
@@ -100,6 +100,7 @@ const Layout: React.FC<LayoutProps> = ({
           </aside>
 
           <div className="bg-gray-100 fixed top-20 left-24 h-14 w-[calc(100%-6rem)] flex items-end flex-row-reverse px-5 shadow-md">
+          {/*
             <div
               className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-ping"
               onClick={() => {
@@ -108,6 +109,8 @@ const Layout: React.FC<LayoutProps> = ({
             >
               <FontAwesomeIcon icon={faArrowUpShortWide} />
             </div>
+            </div>
+            */}
 
             <Link href={"/acc"}>
               <div className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-spin">
@@ -126,7 +129,6 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
 
           <main className="mt-14 ml-20 p-4 w-full text-lg bg-vague">
-            <ToastContainer />
             {children}
           </main>
         </div>

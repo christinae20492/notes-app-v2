@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getServerSession( req, res, authOptions );
 
   if (!session) {
-    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session).`);
+    console.warn(`API: Unauthorized attempt to ${req.method} folders (no session).`);
         console.log(req.headers)
     return res.status(401).json({ message: 'Unauthorized: No active session.' });
   }
@@ -24,50 +24,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (req.method) {
 
     case 'GET':
-      console.log(`API: User ${userId} is requesting all notes.`);
+      console.log(`API: User ${userId} is requesting all folders.`);
       try {
-        const allNotes = await prisma.note.findMany({
+        const allFolders = await prisma.folder.findMany({
           where: {
             userId: userId,
-            isTrash: false,
-            folderId: null
           },
           orderBy: {
             dateCreated: 'desc',
           },
         });
-        return res.status(200).json(allNotes);
+        return res.status(200).json(allFolders);
       } catch (error) {
-        console.error("API: Error fetching notes:", error);
-        return res.status(500).json({ message: 'Internal server error while fetching notes.' });
+        console.error("API: Error fetching folders:", error);
+        return res.status(500).json({ message: 'Internal server error while fetching folders.' });
       }
 
     case 'POST':
-      console.log(`API: User ${userId} is attempting to create a note.`);
-      const { title, body, color, category, tag } = req.body;
+      console.log(`API: User ${userId} is attempting to create a folder.`);
+      const { title, notes } = req.body;
 
-      if (!title || !body) {
-        return res.status(400).json({ message: 'Title and body are required.' });
+      if (!title ) {
+        return res.status(400).json({ message: 'Title is required.' });
       }
 
       try {
-        const newNote = await prisma.note.create({
+        const newFolder = await prisma.folder.create({
           data: {
             id: uuidv4(),
             title,
-            body,
-            color,
-            category,
-            tag: tag,
+           notes,
             userId: userId,
-            folderId: null,
-            isTrash: false,
           },
         });
-        return res.status(201).json({ message: 'Note created successfully!', note: newNote });
+        return res.status(201).json({ message: 'Folder created successfully!', folder: newFolder });
       } catch (error) {
-        console.error("API: Error creating note:", error);
-        return res.status(500).json({ message: 'Failed to create note.' });
+        console.error("API: Error creating folder:", error);
+        return res.status(500).json({ message: 'Failed to create folder.' });
       }
 
     default:

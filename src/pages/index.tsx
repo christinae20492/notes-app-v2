@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
@@ -22,14 +22,19 @@ import FolderItem from "@/app/components/folderlogic";
 import NoteItem from "@/app/components/notelogic";
 import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faShuffle, faThumbtack, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleCheck,
+  faShuffle,
+  faThumbtack,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 import { Folder, Note } from "../app/utils/types";
-import { failToast, warnToast } from "@/app/utils/toast";
+import { failToast, successToast, warnToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
-import { getAllNotes } from "@/app/utils/notesapi";
+import { getAllNotes, updateNote } from "@/app/utils/notesapi";
 import { useSession } from "next-auth/react";
 import { getServerSideProps } from "@/app/middleware";
-
+import { addMultiToFolder, createNewFolder, getAllFolders } from "@/app/utils/folderapi";
 
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -55,24 +60,24 @@ export default function Index() {
   const regularNotes = notes?.filter((note) => note.tag !== "important") || [];
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-      const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
 
-       const sleep = (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
-
-   useEffect(() => {
-    getServerSideProps;
-  if (status === "loading") return;
-
-  if (status === "unauthenticated") {
-    warnToast("unauthenticated")
-  }
-}, [status, router]);
+  const sleep = (ms: number) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
 
   useEffect(() => {
-    if (status === 'authenticated') {
-    fetchData();
+    getServerSideProps;
+    if (status === "loading") return;
+
+    if (status === "unauthenticated") {
+      warnToast("Please sign in to view this page.");
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchData();
     }
   }, [status]);
 
@@ -85,45 +90,49 @@ export default function Index() {
   const fetchData = async () => {
     setLoading(true);
     const loadedNotes = await getAllNotes(session, status);
-    const loadedFolders = await loadFolders();
+    const loadedFolders = await getAllFolders(session, status);
     if (loadedNotes && loadedFolders) {
-    setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
-    setFolders(Array.isArray(loadedFolders) ? loadedFolders : []);
-    setLoading(false);
+      setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
+      setFolders(Array.isArray(loadedFolders) ? loadedFolders : []);
+      setLoading(false);
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     if (refresh) {
-      console.log("refresh")
       fetchData();
       setRefresh(false);
     }
-  },[refresh])
+  }, [refresh]);
 
-  const handleSaveNote = (updatedContent: any) => {
-    const updatedNote = { ...currentNote, content: updatedContent };
-    console.log("Updated note:", updatedNote);
+  const handleSaveNote = async (updatedContent: any) => {
+    await updateNote(currentNote?.id, updatedContent, session, status)
     setModalOpen(false);
   };
 
   const handleAddNotes = () => {
-    const getFolderIdFromNotes = (ids: string[]) => {
+    const getFolderIdFromNotes = (
+      ids: string[],
+      allFolders: Folder[]
+    ): string | undefined => {
+      const folderIdSet = new Set(allFolders.map((folder) => folder.id));
+
       for (let i = 0; i < ids.length; i++) {
-        if (ids[i].startsWith("F")) {
-          return ids[i];
+        const currentId = ids[i];
+        if (folderIdSet.has(currentId)) {
+          return currentId;
         }
       }
     };
 
-    let folder = getFolderIdFromNotes(selectedNotes);
+    let folder = getFolderIdFromNotes(selectedNotes, folders);
 
-     if (!folder) {
-      failToast("No folder selected.")
+    if (!folder) {
+      failToast("No folder selected.");
       return;
     }
 
-    addNotesToFolder(selectedNotes, folder, setNotes, setFolders);
+    addMultiToFolder(selectedNotes, folder, session, status)
 
     setIsMultiSelect(false);
     setSelectedNotes([]);
@@ -140,7 +149,9 @@ export default function Index() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createFolder(inputText, setFolders, setNewFolder, setTextInputVisible);
+    createNewFolder(inputText, session, status);
+    setTextInputVisible(false);
+    getAllFolders(session, status);
   };
 
   const handleSelectFolder = (folderId: string) => {
@@ -167,13 +178,14 @@ export default function Index() {
 
   return (
     <SessionProviderWrapper>
-    <Layout
-    isMultiSelect={isMultiSelect}
-    setIsMultiSelect={setIsMultiSelect}
-    setRefresh={setRefresh}
-    searchBar={searchBar}
-    setSearchBar={setSearchBar}>
-      {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
+      <Layout
+        isMultiSelect={isMultiSelect}
+        setIsMultiSelect={setIsMultiSelect}
+        setRefresh={setRefresh}
+        searchBar={searchBar}
+        setSearchBar={setSearchBar}
+      >
+        {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
         {searchBar && <SearchBar setNotes={setNotes} />}
 
@@ -218,13 +230,6 @@ export default function Index() {
             </form>
           )}
         </div>
-
-        <SortPicker
-          isOpen={openSorter}
-          setIsModalVisible={setOpenSorter}
-          notes={notes}
-          setNotes={setNotes}
-        />
 
         <div className="max-h-1/2 p-4 justify-around">
           {pinnedNotes.length === 0 ? (
@@ -272,14 +277,12 @@ export default function Index() {
           <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
             <button
               className="mx-3 scale-150"
-              onClick={() =>
-                moveMultipleNotesToTrash(selectedNotes, setNotes)
-              }
+              onClick={() => moveMultipleNotesToTrash(selectedNotes, setNotes)}
             >
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <button className="mx-3 scale-150" onClick={handleAddNotes}>
-            <FontAwesomeIcon icon={faShuffle} />
+              <FontAwesomeIcon icon={faShuffle} />
             </button>
             <button
               className="mx-3 scale-150"
@@ -303,13 +306,11 @@ export default function Index() {
           note={currentNote}
           onClose={() => setModalOpen(false)}
           onSaveNote={handleSaveNote}
-  setNotes={setNotes}
-  setFolders={setFolders}
           isInFolder={false}
           isInTrash={false}
           folderId={undefined}
         />
-    </Layout>
+      </Layout>
     </SessionProviderWrapper>
   );
 }
