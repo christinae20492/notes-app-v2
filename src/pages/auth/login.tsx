@@ -41,9 +41,11 @@ const SignInPage: React.FC = () => {
 
       if (result.error) {
         failToast("Invalid credentials. Please try again.");
-      } else if (result.ok) {
+      } else if (result.ok || session) {
         router.push("/");
+        if (session) {
         successToast("Welcome back, " + session.user.username);
+        }
       }
     } catch (error) {
       console.error("An unexpected error occurred during sign-in:", error);

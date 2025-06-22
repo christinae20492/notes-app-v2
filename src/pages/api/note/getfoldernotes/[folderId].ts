@@ -47,12 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    if (notesInFolder.length > 0) {
-      console.log('API: First note found (if any):', JSON.stringify(notesInFolder[0], null, 2));
-    } else {
-      console.log('API: Prisma query returned an empty array for these conditions.');
-    }
-
     return res.status(200).json(notesInFolder);
   } catch (error) {
     console.error(`API: Error fetching notes for folder ${folderId}:`, error);

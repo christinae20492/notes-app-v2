@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Router, { useRouter } from "next/router";
-import { saveNote } from "@/app/utils/noteutility";
 import Layout from "@/app/components/ui/layout";
 import { warnToast } from "@/app/utils/toast";
 import { Note } from "@/app/utils/types";
 import SessionProviderWrapper from "@/app/components/session";
 import { createNewNote } from "@/app/utils/notesapi";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { getServerSideProps } from "@/app/middleware";
 
 export default function CreateNote() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -26,9 +26,19 @@ export default function CreateNote() {
   const [showSettings, setShowSettings] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [searchBar, setSearchBar] = useState(false);
-      const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
 
-  const handleSaveNote = (e: React.FormEvent) => {
+    useEffect(() => {
+    getServerSideProps;
+    if (status === "loading") return;
+
+    if (status === "unauthenticated") {
+      signIn()
+    }
+  }, [status, router]);
+
+
+  const handleSaveNote = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title && !body) {
@@ -37,7 +47,7 @@ export default function CreateNote() {
       return;
     }
 
-    createNewNote(title, body, color, category, session, status);
+    await createNewNote(title, body, color, category, session, status);
     router.push("/");
   };
 
@@ -52,7 +62,7 @@ export default function CreateNote() {
         searchBar={searchBar}
         setSearchBar={setSearchBar}
       >
-        <div className="flex flex-col flex-none w-full h-2/3 p-4 items-center justify-center ml-18">
+        <div className="flex flex-col flex-none w-full h-2/3 p-4 items-center text-center ml-18">
           <form className="w-3/4" onSubmit={handleSaveNote}>
             <input
               name="title"
@@ -67,11 +77,47 @@ export default function CreateNote() {
               name="category"
               placeholder="Define a category"
               className="input"
+              onChange={(e)=>setCategory(e.target.value)}
             />
             <datalist id="category">
-              <option value={"Personal"}></option>
-              <option value={"School"}></option>
-              <option value={"Grocery"}></option>
+              <option value="Personal"></option>
+              <option value="School"></option>
+              <option value="Grocery"></option>
+              <option value="Work"></option>
+              <option value="Projects"></option>
+              <option value="Ideas"></option>
+              <option value="Meetings"></option>
+              <option value="Finances"></option>
+              <option value="Health"></option>
+              <option value="Fitness"></option>
+              <option value="Travel"></option>
+              <option value="Recipes"></option>
+              <option value="Reading"></option>
+              <option value="Movies"></option>
+              <option value="Music"></option>
+              <option value="Hobbies"></option>
+              <option value="Shopping"></option>
+              <option value="To-Do"></option>
+              <option value="Goals"></option>
+              <option value="Wishlist"></option>
+              <option value="Home"></option>
+              <option value="Auto"></option>
+              <option value="Contacts"></option>
+              <option value="Events"></option>
+              <option value="Passwords"></option>
+              <option value="Research"></option>
+              <option value="Development"></option>
+              <option value="Learning"></option>
+              <option value="Marketing"></option>
+              <option value="Sales"></option>
+              <option value="Clients"></option>
+              <option value="Vendors"></option>
+              <option value="Training"></option>
+              <option value="Reminders"></option>
+              <option value="Journal"></option>
+              <option value="Quotes"></option>
+              <option value="Emergency"></option>
+              <option value="Software"></option>
             </datalist>
             <input
               type="color"

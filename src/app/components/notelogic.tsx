@@ -7,6 +7,7 @@ interface NoteItemProps {
     id: string;
     title: string;
     color: string;
+    category: string;
   };
   isSelected: boolean;
   isPinned: boolean;
@@ -35,13 +36,13 @@ const NoteItem: React.FC<NoteItemProps> = ({
       <FontAwesomeIcon icon={faRectangleList} />
       </div>
       <div
-        className={`fixed rounded-lg ${
+        className={`absolute rounded-lg ${
           isPinned ? "w-2 h-8 outline-1 outline-black" : "w-5 h-14"
         }`}
         style={{ backgroundColor: note.color }}
       ></div>
       <div>{note.title}</div>
-      {!isPinned && <div className="text-blue">{note.category}</div>}
+      {!isPinned && <div className="text-mintGreen-900">{note.category}</div>}
     </div>
   );
 };

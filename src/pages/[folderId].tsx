@@ -1,15 +1,4 @@
 import { KeyboardEvent, useEffect, useState } from "react";
-import {
-  loadNotes,
-  moveMultipleNotesToTrash,
-  togglePinNotes,
-} from "@/app/utils/noteutility";
-import {
-  addNotesToFolder,
-  loadFolders,
-  removeNotesFromFolder,
-  renameFolder,
-} from "@/app/utils/folderutil";
 import Layout from "@/app/components/ui/layout";
 import { NoteModal } from "@/app/components/notemodal";
 import { MultiSelectCounter } from "@/app/components/ui/selectcounter";
@@ -23,7 +12,7 @@ import {
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { failToast } from "@/app/utils/toast";
+import { failToast, successToast, warnToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
 import {
   addMultiToFolder,
@@ -33,9 +22,16 @@ import {
   moveMultiFromFolder,
 } from "@/app/utils/folderapi";
 import React from "react";
-import { useSession } from "next-auth/react";
-import { getAllNotes, trashSelectedNotes, updateNote } from "@/app/utils/notesapi";
+import { signIn, useSession } from "next-auth/react";
+import {
+  getAllNotes,
+  pinMultiNotes,
+  trashSelectedNotes,
+  unpinMultiNotes,
+  updateNote,
+} from "@/app/utils/notesapi";
 import loading from "@/app/components/ui/loading";
+import { getServerSideProps } from "@/app/middleware";
 
 export default function ViewFolder() {
   const router = useRouter();
@@ -60,6 +56,16 @@ export default function ViewFolder() {
   const [folderTitle, setFolderTitle] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const { data: session, status } = useSession();
+
+    useEffect(() => {
+    getServerSideProps;
+    if (status === "loading") return;
+
+    if (status === "unauthenticated") {
+      signIn()
+    }
+  }, [status, router]);
+
 
   const findAndFetchFolder = async () => {
     if (status === "loading" || !folderId) {
@@ -147,21 +153,57 @@ export default function ViewFolder() {
   };
 
   const handleSaveNote = async (updatedContent: any) => {
-    await updateNote(currentNote?.id, updatedContent, session, status)
+    await updateNote(currentNote?.id, updatedContent, session, status);
     setModalOpen(false);
   };
 
   const handleAddNotes = async () => {
     if (!folder) return null;
+    setLoading(true);
     await addMultiToFolder(selectedNotes, folder.id, session, status);
     setNoteModalVisible(false);
     setSelectedNotes([]);
-    getFolderNotes(folder.id, session, status);
+    getFolderNotes(folder.id, session, status).then((data) =>
+      setNotes(Array.isArray(data) ? data : [])
+    );
+    setLoading(false);
   };
 
   const handleRenameFolder = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && typeof folderId === "string") {
       renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+    }
+  };
+
+  const handleMultiPin = async (ids, session, status) => {
+    if (isMultiSelect) {
+      const fullSelectedNoteObjects: Note[] = notes.filter((note) =>
+        selectedNotes.includes(note.id)
+      );
+      const allAreNone = fullSelectedNoteObjects.every(
+        (note) => note.tag === "none"
+      );
+      const allAreImportant = fullSelectedNoteObjects.every(
+        (note) => note.tag === "important"
+      );
+      if (allAreNone) {
+        await pinMultiNotes(selectedNotes, session, status);
+        successToast("Selected notes pinned!");
+      } else if (allAreImportant) {
+        await unpinMultiNotes(selectedNotes, session, status);
+        successToast("Selected notes unpinned!");
+      } else {
+        warnToast(
+          "Cannot multi-pin/unpin: Selection contains a mix of pinned, unpinned, or other tagged notes."
+        );
+        return;
+      }
+
+      setSelectedNotes([]);
+      setIsMultiSelect(false);
+      getFolderNotes(folder.id, session, status).then((data) =>
+        setNotes(Array.isArray(data) ? data : [])
+      );
     }
   };
 
@@ -179,27 +221,22 @@ export default function ViewFolder() {
 
   const handleMoveToTrash = () => {
     if (!folder) return null;
-
+    setLoading(true);
     trashSelectedNotes(selectedNotes, session, status);
-
     setSelectedNotes([]);
-    getFolderNotes(folder.id, session, status)
-    .then((data) => setNotes(Array.isArray(data) ? data : []))
-  };
-
-  const handleTogglePinNotes = () => {
-    if (!folder) return null;
-    togglePinNotes(selectedNotes, setNotes, folder.id);
-    setSelectedNotes([]);
-    setIsMultiSelect(false);
+    setIsMultiSelect(false)
+    getFolderNotes(folder.id, session, status).then((data) =>
+      setNotes(Array.isArray(data) ? data : [])
+    );
+    setLoading(false);
   };
 
   const handleRemoveNotes = async () => {
     if (!folder) return null;
+    setLoading(true);
     await moveMultiFromFolder(selectedNotes, folder.id, session, status);
     setSelectedNotes([]);
-    getFolderNotes(folder.id, session, status)
-    .then((data) => setNotes(Array.isArray(data) ? data : []))
+    setLoading(false);
     router.push("/");
   };
 
@@ -354,7 +391,7 @@ export default function ViewFolder() {
             <button className="mx-3 scale-150" onClick={handleRemoveNotes}>
               <FontAwesomeIcon icon={faMinus} />
             </button>
-            <button className="mx-3 scale-150" onClick={handleTogglePinNotes}>
+            <button className="mx-3 scale-150" onClick={handleMultiPin(selectedNotes, session, status)}>
               <FontAwesomeIcon icon={faThumbtack} />
             </button>
             <button
@@ -375,7 +412,7 @@ export default function ViewFolder() {
           onSaveNote={handleSaveNote}
           isInFolder={true}
           isInTrash={false}
-          folderId={typeof folderId === "string" ? folderId : undefined}
+          folderId={folder.id}
         />
       </Layout>
     </SessionProviderWrapper>

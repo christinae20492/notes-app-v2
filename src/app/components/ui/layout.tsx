@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,6 +15,8 @@ import {
 import "@/app/tailwind.css";
 import { useSession, signIn } from "next-auth/react";
 import loading from "./loading";
+import { warnToast } from "@/app/utils/toast";
+import { toggleTheme } from "@/app/utils/theme";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -38,23 +40,38 @@ const Layout: React.FC<LayoutProps> = ({
   setRefresh,
 }) => {
   const { data: session, status } = useSession();
+    const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      signIn();
-    }
+    const savedTheme = localStorage.getItem("theme") || "light";
+    setIsDarkTheme(savedTheme === "dark");
+  }, []);
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+    setIsDarkTheme((prev) => !prev);
+  };
+
+  useEffect(() => {
+    verify();
   }, [status]);
 
-  if (status === "loading") {
-    return <div>{loading()}</div>;
-  }
+  const verify = async () => {
+    if (status === "unauthenticated") {
+      await signIn("credentials", {
+        redirect: false,
+      });
+    } else if (status === "loading" || !session) {
+      return <div>{loading()}</div>;
+    }
+  };
 
   if (status === "authenticated") {
     return (
       <div className="flex flex-col h-screen w-screen">
         <header className="bg-gray-100 h-16 flex items-center justify-between p-5 shadow-sm">
           <Link href="/">
-            <h1 className="font-header text-steelgrey text-3xl">Notes App</h1>
+            <h1 className="font-header text-steelgrey text-3xl">VaultNotes</h1>
           </Link>
         </header>
 
@@ -100,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({
           </aside>
 
           <div className="bg-gray-100 fixed top-20 left-24 h-14 w-[calc(100%-6rem)] flex items-end flex-row-reverse px-5 shadow-md">
-          {/*
+            {/*
             <div
               className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-ping"
               onClick={() => {
@@ -119,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({
             </Link>
 
             <div
-              className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-bounce"
+              className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-spin"
               onClick={() => {
                 setRefresh(true);
               }}

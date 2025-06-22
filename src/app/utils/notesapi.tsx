@@ -263,6 +263,124 @@ export const deleteNote = async (id: string, session: any, status: string): Prom
   }
 };
 
+export const trashSelectedNotes = async (selectedNoteIds: string[], session, status) => {
+
+    if (status === "loading") {
+    warnToast("Authentication status is still loading. Please wait.");
+    return false;
+  }
+
+  if (status === "unauthenticated") {
+    failToast("Please sign in to move notes.");
+    return false;
+  }
+
+  if (selectedNoteIds.length === 0) {
+    alert("Please select at least one note to trash.");
+    return;
+  }
+
+  if (!window.confirm(`Are you sure you want to move ${selectedNoteIds.length} note(s) to trash?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/noteutil/multitrash', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ noteIds: selectedNoteIds }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log(result.message);
+    } else {
+      console.error(result.message || "Failed to trash selected notes.");
+    }
+  } catch (error) {
+    console.error("Client-side error trashing multiple notes:", error);
+  }
+};
+
+export const pinMultiNotes = async (selectedNoteIds: string[], session, status) => {
+
+    if (status === "loading") {
+    warnToast("Authentication status is still loading. Please wait.");
+    return false;
+  }
+
+  if (status === "unauthenticated") {
+    failToast("Please sign in to pin notes.");
+    return false;
+  }
+
+  if (selectedNoteIds.length === 0) {
+    alert("Please select at least one note to pin.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/noteutil/multipin', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ noteIds: selectedNoteIds }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log(result.message);
+    } else {
+      console.error(result.message || "Failed to pin selected notes.");
+    }
+  } catch (error) {
+    console.error("Client-side error pinning multiple notes:", error);
+  }
+};
+
+export const unpinMultiNotes = async (selectedNoteIds: string[], session, status) => {
+
+    if (status === "loading") {
+    warnToast("Authentication status is still loading. Please wait.");
+    return false;
+  }
+
+  if (status === "unauthenticated") {
+    failToast("Please sign in to unpin notes.");
+    return false;
+  }
+
+  if (selectedNoteIds.length === 0) {
+    alert("Please select at least one note to unpin.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/noteutil/multiunpin', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ noteIds: selectedNoteIds }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log(result.message);
+    } else {
+      console.error(result.message || "Failed to unpin selected notes.");
+    }
+  } catch (error) {
+    console.error("Client-side error unpinning multiple notes:", error);
+  }
+};
+
 export const sendNoteToTrash = async (noteId: string, session: any, status: string): Promise<boolean> => {
   if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -347,7 +465,7 @@ export const restoreNoteFromTrash = async (noteId: string, session: any, status:
   }
 };
 
-export const deleteSelectedNotes = async (selectedNoteIds: string[], session, status) => {
+export const deleteSelectedNotes = async (selectedNoteIds: string[], session, status, warn) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -364,9 +482,10 @@ export const deleteSelectedNotes = async (selectedNoteIds: string[], session, st
     return;
   }
 
+  if (warn) {
   if (!window.confirm(`Are you sure you want to delete ${selectedNoteIds.length} note(s)?`)) {
     return;
-  }
+  }}
 
   try {
     const response = await fetch('/api/noteutil/multidelete', {
@@ -386,48 +505,6 @@ export const deleteSelectedNotes = async (selectedNoteIds: string[], session, st
     }
   } catch (error) {
     console.error("Client-side error delete multiple notes:", error);
-  }
-};
-
-export const trashSelectedNotes = async (selectedNoteIds: string[], session, status) => {
-
-    if (status === "loading") {
-    warnToast("Authentication status is still loading. Please wait.");
-    return false;
-  }
-
-  if (status === "unauthenticated") {
-    failToast("Please sign in to move notes.");
-    return false;
-  }
-
-  if (selectedNoteIds.length === 0) {
-    alert("Please select at least one note to trash.");
-    return;
-  }
-
-  if (!window.confirm(`Are you sure you want to move ${selectedNoteIds.length} note(s) to trash?`)) {
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/noteutil/multitrash', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ noteIds: selectedNoteIds }),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      console.log(result.message);
-    } else {
-      console.error(result.message || "Failed to trash selected notes.");
-    }
-  } catch (error) {
-    console.error("Client-side error trashing multiple notes:", error);
   }
 };
 
@@ -456,5 +533,50 @@ export const restoreSelectedNotes = async (selectedNoteIds: string[]) => {
     }
   } catch (error) {
     console.error("Client-side error restoring multiple notes:", error);
+  }
+};
+
+interface SearchResults {
+  notes: Note[];
+  foundInFolders: boolean;
+}
+
+export const searchNotes = async (
+  query: string,
+  session: any,
+  status: string
+): Promise<SearchResults | undefined> => {
+  if (status === "loading") {
+    warnToast("Authentication status is still loading. Please wait.");
+    return undefined;
+  }
+  if (status === "unauthenticated") {
+    failToast("Please sign in to search for notes.");
+    return undefined;
+  }
+  if (!query.trim()) {
+    return { notes: [], foundInFolders: false };
+  }
+
+  try {
+    const response = await fetch(`/api/note/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to perform search.");
+    }
+
+    const data: SearchResults = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Client-side error during search:", error);
+    failToast("An unexpected error occurred during search.");
+    return undefined;
   }
 };

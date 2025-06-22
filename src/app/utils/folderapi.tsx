@@ -235,7 +235,7 @@ export const moveNoteToFolder = async (
   }
 
   try {
-    const response = await fetch(`/api/noteutil/${noteId}/addtofolder`, {
+    const response = await fetch(`/api/noteutil/addtofolder/${noteId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export const moveNoteToFolder = async (
 
 export const removeFromFolder = async (
   noteId: string,
-  targetFolderId: string | null,
+  targetFolderId: string,
   session: any,
   status: string
 ): Promise<boolean> => {
@@ -290,7 +290,7 @@ export const removeFromFolder = async (
   }
 
   try {
-    const response = await fetch(`/api/noteutil/${noteId}/removefromfol`, {
+    const response = await fetch(`/api/noteutil/removefromfol/${noteId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

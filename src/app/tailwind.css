@@ -24,7 +24,7 @@
   
   @layer components {
     .menu-icon {
-      @apply block p-3 scale-150 text-center my-7 text-royalBlue-800;
+      @apply block p-3 scale-150 text-center my-7 text-emeraldGreen-default;
     }
     .input {
       @apply w-4/5 p-3 rounded-sm block my-4 text-center
@@ -46,13 +46,13 @@
       @apply max-w-sm min-h-7 m-2 p-2 border-2 border-steelgrey bg-royalBlue-100 text-darksteelgrey rounded-xl text-center cursor-pointer;
     }
     .note-item {
-      @apply max-w-full min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;
+      @apply max-w-full relative min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;
     }
     .selected-note {
       @apply bg-bluegrey ring ring-darksteelgrey;
     }
     .selected-folder {
-      @apply bg-darksteelgrey ring ring-white text-white;
+      @apply bg-navy-blue ring ring-white text-white;
     }
     .sort-option {
       @apply p-2 ring m-1 rounded-sm ring-lightgrey

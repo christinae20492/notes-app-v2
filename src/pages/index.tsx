@@ -2,17 +2,6 @@
 
 import Head from "next/head";
 import React, { useState, useEffect } from "react";
-import {
-  loadNotes,
-  moveMultipleNotesToTrash,
-  togglePinNotes,
-} from "@/app/utils/noteutility";
-import {
-  createFolder,
-  loadFolders,
-  addNotesToFolder,
-} from "@/app/utils/folderutil";
-
 import { SortPicker } from "@/app/components/sorter";
 import { NoteModal } from "@/app/components/notemodal";
 import Layout from "@/app/components/ui/layout";
@@ -29,12 +18,22 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { Folder, Note } from "../app/utils/types";
-import { failToast, successToast, warnToast } from "@/app/utils/toast";
+import { failToast, processing, successToast, warnToast } from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
-import { getAllNotes, updateNote } from "@/app/utils/notesapi";
-import { useSession } from "next-auth/react";
+import {
+  getAllNotes,
+  pinMultiNotes,
+  trashSelectedNotes,
+  unpinMultiNotes,
+  updateNote,
+} from "@/app/utils/notesapi";
+import { signIn, useSession } from "next-auth/react";
 import { getServerSideProps } from "@/app/middleware";
-import { addMultiToFolder, createNewFolder, getAllFolders } from "@/app/utils/folderapi";
+import {
+  addMultiToFolder,
+  createNewFolder,
+  getAllFolders,
+} from "@/app/utils/folderapi";
 
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -50,7 +49,7 @@ export default function Index() {
   const [isModalOpen, setModalOpen] = useState(false);
 
   const [refresh, setRefresh] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isloading, setLoading] = useState(true);
 
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [inputText, setInputText] = useState("New folder");
@@ -66,14 +65,15 @@ export default function Index() {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
-  useEffect(() => {
+    useEffect(() => {
     getServerSideProps;
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
-      warnToast("Please sign in to view this page.");
+      signIn()
     }
   }, [status, router]);
+
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -106,7 +106,7 @@ export default function Index() {
   }, [refresh]);
 
   const handleSaveNote = async (updatedContent: any) => {
-    await updateNote(currentNote?.id, updatedContent, session, status)
+    await updateNote(currentNote?.id, updatedContent, session, status);
     setModalOpen(false);
   };
 
@@ -132,7 +132,7 @@ export default function Index() {
       return;
     }
 
-    addMultiToFolder(selectedNotes, folder, session, status)
+    addMultiToFolder(selectedNotes, folder, session, status);
 
     setIsMultiSelect(false);
     setSelectedNotes([]);
@@ -151,7 +151,9 @@ export default function Index() {
     e.preventDefault();
     createNewFolder(inputText, session, status);
     setTextInputVisible(false);
-    getAllFolders(session, status);
+    getAllFolders(session, status).then((data) =>
+      setFolders(Array.isArray(data) ? data : [])
+    );;
   };
 
   const handleSelectFolder = (folderId: string) => {
@@ -161,6 +163,38 @@ export default function Index() {
         ? prev.filter((id) => id !== folderId)
         : [...prev, folderId]
     );
+  };
+
+  const handleMultiPin = async (session, status) => {
+    if (isMultiSelect) {
+      const fullSelectedNoteObjects: Note[] = notes.filter((note) =>
+        selectedNotes.includes(note.id)
+      );
+      const allAreNone = fullSelectedNoteObjects.every(
+        (note) => note.tag === "none"
+      );
+      const allAreImportant = fullSelectedNoteObjects.every(
+        (note) => note.tag === "important"
+      );
+      if (allAreNone) {
+        processing("Processing...")
+        await pinMultiNotes(selectedNotes, session, status);
+        successToast("Selected notes pinned!");
+      } else if (allAreImportant) {
+        processing("Processing...")
+        await unpinMultiNotes(selectedNotes, session, status);
+        successToast("Selected notes unpinned!");
+      } else {
+        warnToast(
+          "Cannot multi-pin/unpin: Selection contains a mix of pinned, unpinned, or other tagged notes."
+        );
+        return;
+      }
+
+      setSelectedNotes([]);
+      setIsMultiSelect(false);
+      await getAllNotes(session, status);
+    }
   };
 
   const handleNoteClick = (note: Note) => {
@@ -187,7 +221,7 @@ export default function Index() {
       >
         {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
-        {searchBar && <SearchBar setNotes={setNotes} />}
+        {searchBar && <SearchBar setNotes={setNotes} isHomePage={true} />}
 
         <div className="bg-lightgrey p-8 rounded-lg shadow-lg w-lg text-center">
           {folders.length === 0 ? (
@@ -277,7 +311,7 @@ export default function Index() {
           <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
             <button
               className="mx-3 scale-150"
-              onClick={() => moveMultipleNotesToTrash(selectedNotes, setNotes)}
+              onClick={() => trashSelectedNotes(selectedNotes, session, status)}
             >
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
@@ -286,7 +320,7 @@ export default function Index() {
             </button>
             <button
               className="mx-3 scale-150"
-              onClick={() => togglePinNotes(selectedNotes, setNotes, undefined)}
+              onClick={() => handleMultiPin(selectedNotes, session, status)}
             >
               <FontAwesomeIcon icon={faThumbtack} />
             </button>

@@ -1,19 +1,53 @@
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
-import { searchNotes } from "@/app//utils/noteutility";
+import { useSession } from "next-auth/react";
+import { searchNotes } from "@/app/utils/notesapi";
+import { Note } from "@/app/utils/types";
 
 interface SearchBarProps {
-  setNotes: React.Dispatch<React.SetStateAction<any[]>>;
+  setNotes: React.Dispatch<React.SetStateAction<Note[]>>;
+  isHomePage?: boolean;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ setNotes }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ setNotes, isHomePage }) => {
   const [query, setQuery] = useState("");
+  const { data: session, status } = useSession();
+  const [folderSearchMessage, setFolderSearchMessage] = useState<string | null>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    const searchResults = searchNotes(query, undefined);
-    setNotes(searchResults);
+
+    if (!query.trim()) {
+      setNotes([]);
+      setFolderSearchMessage(null);
+      return;
+    }
+
+    if (status === "loading" || status === "unauthenticated") {
+        console.warn("Authentication status: ", status);
+        return;
+    }
+
+    try {
+      const searchResults = await searchNotes(query, session, status);
+
+      if (searchResults) {
+        setNotes(searchResults.notes);
+        if (isHomePage && searchResults.foundInFolders) {
+          setFolderSearchMessage("We've found results in your folders...");
+        } else {
+          setFolderSearchMessage(null);
+        }
+      } else {
+        setNotes([]);
+        setFolderSearchMessage(null);
+      }
+    } catch (error) {
+      console.error("Error during search:", error);
+      setNotes([]);
+      setFolderSearchMessage(null);
+    }
   };
 
   return (
@@ -27,9 +61,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ setNotes }) => {
           className="p-2 w-2/5"
         />
         <button type="submit" className="button rounded-none">
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
         </button>
       </form>
+      {isHomePage && folderSearchMessage && (
+        <span className="text-sm text-gray-600 mt-1 block">
+          {folderSearchMessage}
+        </span>
+      )}
     </div>
   );
 };

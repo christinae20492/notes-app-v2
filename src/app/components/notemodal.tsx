@@ -9,9 +9,10 @@ import {
   getAllNotes,
   restoreNoteFromTrash,
   sendNoteToTrash,
+  updateNote,
 } from "../utils/notesapi";
 import { useSession } from "next-auth/react";
-import { removeFromFolder } from "../utils/folderapi";
+import { getFolderNotes, removeFromFolder } from "../utils/folderapi";
 
 interface NoteModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   folderId,
 }) => {
   const [updatedNote, setUpdatedNote] = useState(note);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -53,7 +55,9 @@ export const NoteModal: React.FC<NoteModalProps> = ({
       ) {
         return;
       }
+      setLoading(true);
       await deleteNote(note.id, session, status);
+      setLoading(false);
     }
 
     onClose();
@@ -61,7 +65,10 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   };
 
   const handleRestoreNote = async () => {
+    if (!isInTrash) return;
+    setLoading(true);
     await restoreNoteFromTrash(note.id, session, status);
+    setLoading(false);
     router.push("/");
   };
 
@@ -82,8 +89,17 @@ export const NoteModal: React.FC<NoteModalProps> = ({
     router.push("/");
   };
 
+  const handleSaveNote = async () => {
+    await updateNote(note.id, { body: updatedNote }, session, status);
+    onClose();
+    if (isInFolder) {
+      getFolderNotes(folderId, session, status);
+    } else {
+      getAllNotes(session, status);
+    }
+  };
+
   if (!isOpen) return null;
-  if (!onSaveNote) return null;
 
   return (
     <div className="modal-backdrop z-20">
@@ -105,7 +121,10 @@ export const NoteModal: React.FC<NoteModalProps> = ({
             </button>
           )}
 
-          <button className="button bg-red" onClick={handleDeleteNote}>
+          <button
+            className="button bg-crimsonRed-700"
+            onClick={handleDeleteNote}
+          >
             Delete
           </button>
 
@@ -113,13 +132,8 @@ export const NoteModal: React.FC<NoteModalProps> = ({
             Close
           </button>
 
-          {isInTrash ? (
-            <div></div>
-          ) : (
-            <button
-              className="submit-button"
-              onClick={() => onSaveNote(updatedNote)}
-            >
+          {!isInTrash && onSaveNote && (
+            <button className="submit-button" onClick={handleSaveNote}>
               Save Note
             </button>
           )}
