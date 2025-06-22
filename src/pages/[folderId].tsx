@@ -109,7 +109,7 @@ export default function ViewFolder() {
   }, []);
 
   useEffect(() => {
-    if (refresh) {
+    if (refresh && folder) {
       getFolderNotes(folder.id, session, status)
         .then((data) => setNotes(Array.isArray(data) ? data : []))
         .catch((error) =>
@@ -153,7 +153,8 @@ export default function ViewFolder() {
   };
 
   const handleSaveNote = async (updatedContent: any) => {
-    await updateNote(currentNote?.id, updatedContent, session, status);
+    if (!currentNote) return null;
+    await updateNote(currentNote.id, updatedContent, session, status);
     setModalOpen(false);
   };
 
@@ -169,13 +170,14 @@ export default function ViewFolder() {
     setLoading(false);
   };
 
-  const handleRenameFolder = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && typeof folderId === "string") {
-      renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
-    }
-  };
 
-  const handleMultiPin = async (ids, session, status) => {
+  //const handleRenameFolder = (e: KeyboardEvent<HTMLInputElement>) => {
+    //if (e.key === "Enter" && typeof folderId === "string") {
+     // renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+   // }
+ // };
+
+  const handleMultiPin = async (session: any, status: any) => {
     if (isMultiSelect) {
       const fullSelectedNoteObjects: Note[] = notes.filter((note) =>
         selectedNotes.includes(note.id)
@@ -199,6 +201,7 @@ export default function ViewFolder() {
         return;
       }
 
+      if (!folder) return null;
       setSelectedNotes([]);
       setIsMultiSelect(false);
       getFolderNotes(folder.id, session, status).then((data) =>
@@ -207,17 +210,17 @@ export default function ViewFolder() {
     }
   };
 
-  const handleRenameFolderKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && typeof folderId === "string") {
-      renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
-    }
-  };
+  //const handleRenameFolderKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    //if (e.key === "Enter" && typeof folderId === "string") {
+      //renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+  //  }
+  //};
 
-  const handleRenameFolderBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (typeof folderId === "string") {
-      renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
-    }
-  };
+  //const handleRenameFolderBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+   // if (typeof folderId === "string") {
+    //  renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+   // }
+ // };
 
   const handleMoveToTrash = () => {
     if (!folder) return null;
@@ -285,9 +288,9 @@ export default function ViewFolder() {
                 className="text-center rounded-md outline-darkgrey"
                 type="text"
                 value={folderTitle}
-                onChange={(e) => setFolderTitle(e.target.value)}
-                onKeyDown={handleRenameFolderKey}
-                onBlur={handleRenameFolderBlur}
+                //onChange={(e) => setFolderTitle(e.target.value)}
+                //onKeyDown={handleRenameFolderKey}
+                //onBlur={handleRenameFolderBlur}
                 autoFocus
               />
             ) : (
@@ -391,7 +394,7 @@ export default function ViewFolder() {
             <button className="mx-3 scale-150" onClick={handleRemoveNotes}>
               <FontAwesomeIcon icon={faMinus} />
             </button>
-            <button className="mx-3 scale-150" onClick={handleMultiPin(selectedNotes, session, status)}>
+            <button className="mx-3 scale-150" onClick={()=>handleMultiPin(session, status)}>
               <FontAwesomeIcon icon={faThumbtack} />
             </button>
             <button

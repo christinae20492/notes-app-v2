@@ -39,9 +39,9 @@ const SignInPage: React.FC = () => {
         callbackUrl: "/",
       });
 
-      if (result.error) {
+      if (result?.error) {
         failToast("Invalid credentials. Please try again.");
-      } else if (result.ok || session) {
+      } else if (result?.ok || session) {
         router.push("/");
         if (session) {
         successToast("Welcome back, " + session.user.username);

@@ -92,7 +92,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   const handleSaveNote = async () => {
     await updateNote(note.id, { body: updatedNote }, session, status);
     onClose();
-    if (isInFolder) {
+    if (isInFolder && folderId) {
       getFolderNotes(folderId, session, status);
     } else {
       getAllNotes(session, status);
