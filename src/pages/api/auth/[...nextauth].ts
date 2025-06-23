@@ -1,6 +1,16 @@
-import NextAuth from "next-auth";
+import NextAuth, {
+  AuthOptions,
+  User as NextAuthUser,
+  Account,
+  Profile,
+  Session,
+  JWT,
+} from "next-auth";
+
+import type { CallbacksOptions } from "next-auth";
+import type { AdapterUser } from "next-auth/adapters";
+
 import CredentialsProvider from "next-auth/providers/credentials";
-import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/app/prisma";
 import bcryptjs from "bcryptjs";
@@ -15,20 +25,17 @@ declare module "next-auth" {
       username?: string | null;
     };
   }
+
   interface JWT {
     id?: string;
     username?: string | null;
+    email?: string | null;
   }
 }
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    // EmailProvider({
-    //   server: process.env.EMAIL_SERVER,
-    //   from: process.env.EMAIL_FROM,
-    //   maxAge: 24 * 60 * 60,
-    // }),
     CredentialsProvider({
       name: "Sign In",
       credentials: {
@@ -49,7 +56,7 @@ export const authOptions = {
         const password = String(credentials.password);
 
         try {
-          let user = null;
+          let user: Awaited<ReturnType<typeof prisma.user.findUnique>> | null = null;
 
           if (usernameOrEmail.includes('@')) {
             user = await prisma.user.findUnique({
@@ -76,11 +83,10 @@ export const authOptions = {
           console.log("User authenticated successfully:", user.email);
           return {
             id: user.id,
-            name: user.username,
+            name: user.username || user.email,
             email: user.email,
             username: user.username,
-            // image: user.image,
-          };
+          } as NextAuthUser;
         } catch (error) {
           console.error("Error during credentials authorization:", error);
           return null;
@@ -88,22 +94,40 @@ export const authOptions = {
       },
     }),
   ],
- session: {
+  session: {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, account, profile }) {
+    async jwt(params: Parameters<CallbacksOptions["jwt"]>[0]) {
+      const { token, user, account, profile, trigger, isNewUser, session } = params;
+
       if (user) {
         token.id = user.id;
-        token.username = (user as any).username;
+
+        if ('username' in user && user.username !== undefined) {
+             token.username = user.username;
+        } else if (user.name) {
+            token.username = user.name;
+        }
         token.email = user.email;
       }
+
+      if (trigger === "update" && session?.user?.username) {
+        token.username = session.user.username;
+      }
+
       return token;
     },
-    async session({ session, token }) {
+    async session(params: Parameters<CallbacksOptions["session"]>[0]) {
+      const { session, token, user } = params;
+
       if (token.id) {
         session.user.id = token.id as string;
+      }
+      if (token.username) {
         session.user.username = token.username as string;
+      }
+      if (token.email) {
         session.user.email = token.email as string;
       }
       return session;
@@ -111,7 +135,6 @@ export const authOptions = {
   },
   pages: {
     signIn: "/auth/login",
-    error: "/auth/error",
   },
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {
@@ -121,12 +144,11 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false,
-        //secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https://'),
+        secure: process.env.NODE_ENV === 'production',
       },
     },
   },
-  debug: process.env.NODE_ENV === "development", // Debug mode (turn off in production)
+  debug: process.env.NODE_ENV === "development",
 };
 
 export default NextAuth(authOptions);
