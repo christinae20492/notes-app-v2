@@ -106,7 +106,8 @@ export default function Index() {
   }, [refresh]);
 
   const handleSaveNote = async (updatedContent: any) => {
-    await updateNote(currentNote?.id, updatedContent, session, status);
+    if (!currentNote) return null;
+    await updateNote(currentNote.id, updatedContent, session, status);
     setModalOpen(false);
   };
 
@@ -165,7 +166,7 @@ export default function Index() {
     );
   };
 
-  const handleMultiPin = async (session, status) => {
+  const handleMultiPin = async (session: any, status: any) => {
     if (isMultiSelect) {
       const fullSelectedNoteObjects: Note[] = notes.filter((note) =>
         selectedNotes.includes(note.id)
@@ -320,7 +321,7 @@ export default function Index() {
             </button>
             <button
               className="mx-3 scale-150"
-              onClick={() => handleMultiPin(selectedNotes, session, status)}
+              onClick={() => handleMultiPin(session, status)}
             >
               <FontAwesomeIcon icon={faThumbtack} />
             </button>
