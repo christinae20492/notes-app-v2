@@ -23,7 +23,6 @@ export interface Note {
   
   export interface EditFolder {
     title?: string;
-    notes?: Note[];
   }
   
   export interface EditNote {
