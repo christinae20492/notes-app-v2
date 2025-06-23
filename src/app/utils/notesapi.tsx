@@ -263,7 +263,7 @@ export const deleteNote = async (id: string, session: any, status: string): Prom
   }
 };
 
-export const trashSelectedNotes = async (selectedNoteIds: string[], session, status) => {
+export const trashSelectedNotes = async (selectedNoteIds: string[], session: any, status: string) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -305,7 +305,7 @@ export const trashSelectedNotes = async (selectedNoteIds: string[], session, sta
   }
 };
 
-export const pinMultiNotes = async (selectedNoteIds: string[], session, status) => {
+export const pinMultiNotes = async (selectedNoteIds: string[], session: any, status: string) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -343,7 +343,7 @@ export const pinMultiNotes = async (selectedNoteIds: string[], session, status) 
   }
 };
 
-export const unpinMultiNotes = async (selectedNoteIds: string[], session, status) => {
+export const unpinMultiNotes = async (selectedNoteIds: string[], session: any, status: string) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -465,7 +465,7 @@ export const restoreNoteFromTrash = async (noteId: string, session: any, status:
   }
 };
 
-export const deleteSelectedNotes = async (selectedNoteIds: string[], session, status, warn) => {
+export const deleteSelectedNotes = async (selectedNoteIds: string[], session: any, status: string, warn: boolean) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");

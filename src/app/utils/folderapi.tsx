@@ -318,7 +318,7 @@ export const removeFromFolder = async (
   }
 };
 
-export const addMultiToFolder = async (selectedNoteIds: string[], folder: string, session, status) => {
+export const addMultiToFolder = async (selectedNoteIds: string[], folder: string, session: any, status: string) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -356,7 +356,7 @@ export const addMultiToFolder = async (selectedNoteIds: string[], folder: string
   }
 };
 
-export const moveMultiFromFolder = async (selectedNoteIds: string[], folder: string, session, status) => {
+export const moveMultiFromFolder = async (selectedNoteIds: string[], folder: string, session: any, status: string) => {
 
     if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");

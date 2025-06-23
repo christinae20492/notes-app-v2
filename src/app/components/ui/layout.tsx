@@ -86,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div
               className="menu-icon cursor-pointer"
               onClick={() => {
-                setIsMultiSelect(!isMultiSelect);
+                setIsMultiSelect?.(!isMultiSelect);
               }}
             >
               <FontAwesomeIcon icon={faCircleCheck} />
@@ -99,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div
               className="menu-icon cursor-pointer"
               onClick={() => {
-                setSearchBar(!searchBar);
+                setSearchBar?.(!searchBar);
               }}
             >
               <FontAwesomeIcon icon={faMagnifyingGlass} />
@@ -138,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div
               className="p-5 scale-125 text-darksteelgrey cursor-pointer hover:animate-spin"
               onClick={() => {
-                setRefresh(true);
+                setRefresh?.(true);
               }}
             >
               <FontAwesomeIcon icon={faRotate} />

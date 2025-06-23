@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { sortNotes } from '@/app/utils/noteutility';
 import { faRectangleXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -19,6 +18,7 @@ export const SortPicker: React.FC<SortPickerProps> = ({ isOpen, setIsModalVisibl
     setSelectedValue(value);
     let sortedNotes = [];
     
+    /*
     switch (value) {
       case 'dateAscending':
         sortedNotes = sortNotes(notes, 'dateCreated').reverse();
@@ -39,6 +39,8 @@ export const SortPicker: React.FC<SortPickerProps> = ({ isOpen, setIsModalVisibl
 
     setNotes(sortedNotes);
     setIsModalVisible(false);
+      */
+
   };
 
   const DATA = [
