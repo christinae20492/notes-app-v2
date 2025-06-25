@@ -58,7 +58,7 @@ export default function ViewFolder() {
   const { data: session, status } = useSession();
 
     useEffect(() => {
-    getServerSideProps;
+    //getServerSideProps;
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
