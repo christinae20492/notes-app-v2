@@ -32,6 +32,7 @@ import {
 } from "@/app/utils/notesapi";
 import loading from "@/app/components/ui/loading";
 import { getServerSideProps } from "@/app/middleware";
+import Head from "next/head";
 
 export default function ViewFolder() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function ViewFolder() {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [folderTitle, setFolderTitle] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [isloading, setLoading] = useState(false);
   const { data: session, status } = useSession();
 
     useEffect(() => {
@@ -264,8 +265,8 @@ export default function ViewFolder() {
     });
   };
 
-  if (!folder || loading) {
-    return <div>{loading}</div>;
+  if (!folder || isloading) {
+    return <div>{loading()}</div>;
   }
 
   return (
@@ -278,7 +279,11 @@ export default function ViewFolder() {
         searchBar={searchBar}
         setRefresh={setRefresh}
       >
-        <div className="bg-white top-28 left-24 h-12 w-[calc(100%-6rem)] fixed p-3 text-center shadow-md">
+        <Head>
+        <title>VaultNotes - {folderTitle}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+        <div className="bg-white top-28 md:left-24 left-0 h-12 md:w-[calc(100%-6rem)] w-full md:fixed p-3 text-center shadow-md">
           <h1
             className="text-2xl font-header shadow-sm"
             onDoubleClick={() => setIsEditingTitle(true)}
@@ -299,22 +304,22 @@ export default function ViewFolder() {
           </h1>
         </div>
 
-        <div className="bg-white top-40 left-24 h-22 w-[calc(100%-6rem)] fixed p-3 shadow-md">
+        <div className="bg-white top-44 md:left-24 left-0 h-22 md:w-[calc(100%-6rem)] w-full text-center md:fixed p-3 shadow-md block">
           <button
-            className="button bg-red"
+            className="button bg-red xl:w-40 md:w-1/4"
             onClick={() => handleDeleteFolder(folder.id)}
           >
             Delete Folder
           </button>
           <button
-            className="button bg-pastelblue"
+            className="button bg-pastelblue xl:w-40 md:w-1/4"
             onClick={() => setNoteModalVisible(true)}
           >
             Add Notes
           </button>
         </div>
 
-        <div className="mt-32 max-h-1/2 w-3/4 p-4 justify-around">
+        <div className="md:mt-16 mt-4 max-h-1/2 w-3/4 p-4 justify-around block">
           {pinnedNotes.length === 0 ? (
             <div className="hidden">
               <p>null</p>
@@ -335,7 +340,7 @@ export default function ViewFolder() {
           )}
         </div>
 
-        <div className="w-5/6 max-h-5/6 p-5 justify-around">
+        <div className="md:w-5/6 w-full max-h-5/6 md:p-5 p-2 justify-around md:inline block">
           {notes.length === 0 ? (
             <p className="text-lg text-gray-500 text-center font-body">
               Aww, this folder's empty.
@@ -358,14 +363,14 @@ export default function ViewFolder() {
 
         {noteModalVisible && (
           <div className="modal-backdrop">
-            <div className="modal-main bg-white h-3/4 w-5/6">
+            <div className="modal-main bg-white md:h-3/4 md:w-5/6 p-0">
               <button
                 className="button w-16 bg-red"
                 onClick={() => setNoteModalVisible(false)}
               >
                 x
               </button>
-              <div className="outline-2 outline-red max-h-1/2 p-8 justify-around overflow-y-scroll">
+              <div className="outline-2 outline-red md:max-h-1/2 max-h-2/3 md:p-8 justify-evenly overflow-y-scroll">
                 <div className="note-container">
                   {mainNotes.map((note: Note) => (
                     <NoteItem
@@ -379,7 +384,7 @@ export default function ViewFolder() {
                   ))}
                 </div>
               </div>
-              <button className="button" onClick={handleAddNotes}>
+              <button className="button md:text-center md:w-1/4" onClick={handleAddNotes}>
                 Add To Folder
               </button>
             </div>

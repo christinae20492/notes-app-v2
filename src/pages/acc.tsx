@@ -5,6 +5,7 @@ import { successToast, failToast, warnToast } from '@/app/utils/toast';
 import Layout from '@/app/components/ui/layout'; // Assuming your layout wraps the page
 import loading from '@/app/components/ui/loading';
 import router from 'next/router';
+import Head from 'next/head';
 
 export default function UserProfilePage() {
   const { data: session, status } = useSession();
@@ -95,6 +96,10 @@ export default function UserProfilePage() {
 
   return (
     <Layout>
+      <Head>
+        <title>VaultNotes - Your Account</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <div className="container mx-auto p-8">
         <h1 className="text-3xl text-center font-bold mb-6">Your Profile</h1>
 

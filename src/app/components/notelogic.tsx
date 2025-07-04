@@ -37,7 +37,7 @@ const NoteItem: React.FC<NoteItemProps> = ({
       </div>
       <div
         className={`absolute rounded-lg ${
-          isPinned ? "w-2 h-8 outline-1 outline-black" : "w-5 h-14"
+          isPinned ? "w-2 h-8 outline-1 outline-black" : "lg:w-5 md:w-3 md:h-14 w-2 h-10"
         }`}
         style={{ backgroundColor: note.color }}
       ></div>

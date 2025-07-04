@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "@/app/components/ui/layout";
 import { MultiSelectCounter } from "@/app/components/ui/selectcounter";
 import { Note } from "@/app/utils/types";
-import { failToast, warnToast } from "@/app/utils/toast";
+import { failToast, processing, warnToast } from "@/app/utils/toast";
 import { NoteModal } from "@/app/components/notemodal";
 import NoteItem from "@/app/components/notelogic";
 import { useRouter } from "next/router";
@@ -24,6 +24,7 @@ import {
 import { signIn, useSession } from "next-auth/react";
 import loading from "@/app/components/ui/loading";
 import { getServerSideProps } from "@/app/middleware";
+import Head from "next/head";
 
 export default function TrashPage() {
   const [trashNotes, setTrashNotes] = useState<Note[]>([]);
@@ -122,9 +123,11 @@ export default function TrashPage() {
   };
 
   const handleRestoreSelectedNotes = async () => {
+    setLoading(true)
     await restoreSelectedNotes(selectedNotes);
     setSelectedNotes([]);
     router.push("/");
+    setLoading(false)
   };
 
   const handleNoteClick = (note: Note) => {
@@ -175,6 +178,7 @@ const removeExpiredNotes = async (): Promise<void> => {
     });
 
     if (idsToPermanentlyDelete.length > 0) {
+      processing("Deleting old trash notes...")
       const success = await deleteSelectedNotes(idsToPermanentlyDelete, session, status, false);
 
       if (success) {
@@ -200,7 +204,11 @@ if (isloading) {
         isMultiSelect={isMultiSelect}
         setRefresh={setRefresh}
       >
-        <div className="max-h-1/2 p-8">
+        <Head>
+        <title>VaultNotes - Trash</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+        <div className="max-h-1/2 lg:p-8 p-2">
           {trashNotes.length === 0 ? (
             <p className="text-lg text-gray-500 text-center font-body">
               The trash was just taken out.

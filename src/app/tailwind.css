@@ -24,29 +24,36 @@
   
   @layer components {
     .menu-icon {
-      @apply block p-3 scale-150 text-center my-7 text-emeraldGreen-default;
+      @apply bg-white inline-block md:inline md:bg-none md:p-3 px-6 scale-150 text-center md:my-7 md:left-0 text-mintGreenDesaturated-900;
+    }
+    .mobile-icon {
+      @apply bg-white grow scale-150 text-center text-mintGreenDesaturated-900;
     }
     .input {
-      @apply w-4/5 p-3 rounded-sm block my-4 text-center
+      @apply lg:w-4/5 md:w-full p-3 rounded-sm block my-4 text-center w-full
         focus:bg-lightblue focus:rounded-md focus:border-steelgrey focus:border-2;
     }
     .invalid-input {
       @apply 
     }
     .submit-button {
-      @apply bg-royalBlue-900 text-white p-3 m-2 rounded-lg text-sm outline-offset-8 outline-black drop-shadow-lg;
+      @apply bg-royalBlue-900 text-white p-3 m-2 rounded md:rounded-lg lg:w-32 lg:h-10 md:text-sm text-lg outline-black drop-shadow-lg;
     }
     .button{
-      @apply bg-steelgrey outline-2 outline-darksteelgrey outline-offset-8 text-white p-3 m-2 rounded-lg text-sm;
+      @apply bg-steelgrey outline-2 outline-darksteelgrey outline-offset-8 text-white
+      xl:w-24
+      lg:w-32 lg:h-fit
+      md:p-3 md:m-2 md:rounded-lg md:text-sm md:inline md:w-20 md:my-0
+      block py-3 m-1 px-3 w-full rounded text-lg my-5;
     }
     .note-container {
-      @apply grid grid-cols-5 gap-2 justify-evenly;
+      @apply grid xl:grid-cols-5 lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2 justify-evenly;
     }
     .folder-item {
       @apply max-w-sm min-h-7 m-2 p-2 border-2 border-steelgrey bg-royalBlue-100 text-darksteelgrey rounded-xl text-center cursor-pointer;
     }
     .note-item {
-      @apply max-w-full relative min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;
+      @apply w-full relative min-h-7 m-2 p-2 border-2 border-darksteelgrey rounded-xl text-center bg-white cursor-pointer;
     }
     .selected-note {
       @apply bg-bluegrey ring ring-darksteelgrey;
@@ -62,10 +69,10 @@
       @apply bg-steelgrey;
     }
     .modal-backdrop {
-      @apply fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50;
+      @apply fixed inset-0 flex md:items-center md:justify-center bg-black bg-opacity-50 z-40;
     }
     .modal-main {
-      @apply p-6 rounded-lg shadow-lg;
+      @apply p-6 rounded-lg shadow-lg xl:w-1/2 lg:h-2/3 lg:w-3/4 md:h-fit md:w-2/3 h-full w-full z-50;
     }
   }
   

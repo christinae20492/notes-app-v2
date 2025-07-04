@@ -8,6 +8,7 @@ const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -15,7 +16,7 @@ const RegisterPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       failToast("All fields are required.");
       setIsLoading(false);
       return;
@@ -23,6 +24,12 @@ const RegisterPage: React.FC = () => {
 
     if (password.length < 6) {
       failToast("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      failToast("Passwords do not match.");
       setIsLoading(false);
       return;
     }
@@ -109,6 +116,21 @@ const RegisterPage: React.FC = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirm-password" className="sr-only">Confirm Password</label>
+            <input
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              autoComplete="new-password"
+              required
+              className="relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 sm:text-base transition duration-200"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 

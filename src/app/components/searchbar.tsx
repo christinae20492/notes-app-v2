@@ -58,7 +58,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ setNotes, isHomePage }) =>
           placeholder="Looking for something?"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="p-2 w-2/5"
+          className="p-2 w-4/5 md:w-2/5"
         />
         <button type="submit" className="button rounded-none">
           <FontAwesomeIcon icon={faMagnifyingGlass} />

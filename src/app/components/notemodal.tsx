@@ -7,6 +7,7 @@ import {
   copyNote,
   deleteNote,
   getAllNotes,
+  getTrashNotes,
   restoreNoteFromTrash,
   sendNoteToTrash,
   updateNote,
@@ -61,7 +62,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
     }
 
     onClose();
-    getAllNotes(session, status);
+    await getTrashNotes(session, status);
   };
 
   const handleRestoreNote = async () => {
@@ -103,14 +104,14 @@ export const NoteModal: React.FC<NoteModalProps> = ({
 
   return (
     <div className="modal-backdrop z-20">
-      <div className="modal-main bg-lightgrey h-1/2 w-1/2 z-40">
+      <div className="modal-main bg-lightgrey">
         <h2 className="text-xl font-semibold mb-4 text-center">{note.title}</h2>
         <textarea
           value={updatedNote}
           onChange={(e) => setUpdatedNote(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded h-3/4"
+          className="w-full p-3 border border-gray-300 rounded md:h-96 h-96"
         />
-        <div className="flex justify-end mt-4">
+        <div className="md:flex justify-stretch place-content-center mt-4">
           {isInTrash ? (
             <button className="button bg-blue" onClick={handleRestoreNote}>
               Restore
@@ -133,7 +134,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
           </button>
 
           {!isInTrash && onSaveNote && (
-            <button className="submit-button" onClick={handleSaveNote}>
+            <button className="submit-button md:w-20 lg:w-32 lg:h-10 w-full" onClick={handleSaveNote}>
               Save Note
             </button>
           )}

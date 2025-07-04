@@ -9,6 +9,7 @@ import SessionProviderWrapper from "@/app/components/session";
 import { createNewNote } from "@/app/utils/notesapi";
 import { signIn, useSession } from "next-auth/react";
 import { getServerSideProps } from "@/app/middleware";
+import Head from "next/head";
 
 export default function CreateNote() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -62,8 +63,12 @@ export default function CreateNote() {
         searchBar={searchBar}
         setSearchBar={setSearchBar}
       >
-        <div className="flex flex-col flex-none w-full h-2/3 p-4 items-center text-center ml-18">
-          <form className="w-3/4" onSubmit={handleSaveNote}>
+        <Head>
+        <title>VaultNotes - Create a Note</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+        <div className="flex flex-col flex-none w-full h-2/3 p-4 items-center text-center lg:ml-18 md:-ml-10">
+          <form className="md:w-3/4 w-full" onSubmit={handleSaveNote}>
             <input
               name="title"
               placeholder="Title"

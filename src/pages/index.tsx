@@ -18,7 +18,12 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { Folder, Note } from "../app/utils/types";
-import { failToast, processing, successToast, warnToast } from "@/app/utils/toast";
+import {
+  failToast,
+  processing,
+  successToast,
+  warnToast,
+} from "@/app/utils/toast";
 import SessionProviderWrapper from "@/app/components/session";
 import {
   getAllNotes,
@@ -34,6 +39,7 @@ import {
   createNewFolder,
   getAllFolders,
 } from "@/app/utils/folderapi";
+import loading from "@/app/components/ui/loading";
 
 export default function Index() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -65,15 +71,14 @@ export default function Index() {
     return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
-    useEffect(() => {
+  useEffect(() => {
     getServerSideProps;
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
-      signIn()
+      signIn();
     }
   }, [status, router]);
-
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -154,7 +159,7 @@ export default function Index() {
     setTextInputVisible(false);
     getAllFolders(session, status).then((data) =>
       setFolders(Array.isArray(data) ? data : [])
-    );;
+    );
   };
 
   const handleSelectFolder = (folderId: string) => {
@@ -178,11 +183,11 @@ export default function Index() {
         (note) => note.tag === "important"
       );
       if (allAreNone) {
-        processing("Processing...")
+        processing("Processing...");
         await pinMultiNotes(selectedNotes, session, status);
         successToast("Selected notes pinned!");
       } else if (allAreImportant) {
-        processing("Processing...")
+        processing("Processing...");
         await unpinMultiNotes(selectedNotes, session, status);
         successToast("Selected notes unpinned!");
       } else {
@@ -211,6 +216,22 @@ export default function Index() {
     }
   };
 
+  const handleTrashNotes = async () => {
+    if (selectedNotes.length === 0) {
+      warnToast("No notes selected.");
+    }
+    setLoading(true);
+    await trashSelectedNotes(selectedNotes, session, status);
+    setSelectedNotes([]);
+    setIsMultiSelect(false);
+    fetchData();
+    setLoading(false);
+  };
+
+  if (isloading) {
+    return <div>{loading()}</div>
+  }
+
   return (
     <SessionProviderWrapper>
       <Layout
@@ -220,11 +241,15 @@ export default function Index() {
         searchBar={searchBar}
         setSearchBar={setSearchBar}
       >
+        <Head>
+          <title>VaultNotes - Home</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
         {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
         {searchBar && <SearchBar setNotes={setNotes} isHomePage={true} />}
 
-        <div className="bg-lightgrey p-8 rounded-lg shadow-lg w-lg text-center">
+        <div className="h-1/5 md:h-2/5 lg:h-1/4 bg-lightgrey md:p-8 p-2 rounded-lg shadow-lg w-lg text-center overflow-y-scroll">
           {folders.length === 0 ? (
             <p className="text-lg text-gray-500 text-center">
               You don't have any folders...yet!
@@ -266,7 +291,7 @@ export default function Index() {
           )}
         </div>
 
-        <div className="max-h-1/2 p-4 justify-around">
+        <div className="max-h-1/2 p-4 justify-around overflow-x-scroll">
           {pinnedNotes.length === 0 ? (
             <div className="hidden">
               <p>null</p>
@@ -287,7 +312,7 @@ export default function Index() {
           )}
         </div>
 
-        <div className="max-h-3/4 justify-around">
+        <div className="h-2/3 md:h-1/2 lg:h-4/5 justify-around overflow-y-scroll">
           {notes.length === 0 ? (
             <p className="text-lg text-gray-500 text-center font-body">
               No notes available. Add a note to get started!
@@ -310,10 +335,7 @@ export default function Index() {
 
         {isMultiSelect && (
           <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
-            <button
-              className="mx-3 scale-150"
-              onClick={() => trashSelectedNotes(selectedNotes, session, status)}
-            >
+            <button className="mx-3 scale-150" onClick={handleTrashNotes}>
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <button className="mx-3 scale-150" onClick={handleAddNotes}>

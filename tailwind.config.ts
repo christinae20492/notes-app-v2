@@ -97,6 +97,13 @@ export default {
         700: "#3FBE4D",
         900: "#1E6825",
       },
+      mintGreenDesaturated: {
+  100: "#EDF2EE",
+  300: "#BFDDC0",
+  default: "#9EC99E",
+  700: "#759B76",
+  900: "#4D634E",
+},
     },
     fontFamily:{
       'header':['Roboto', 'sans-serif'],

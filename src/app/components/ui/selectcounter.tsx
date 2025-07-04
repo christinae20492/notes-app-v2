@@ -15,7 +15,7 @@ export const MultiSelectCounter: React.FC<MultiSelectProps> = ({ selectedNotes }
   }, [count]);
 
   return (
-    <div className="w-full h-28 absolute top-0 bg-white shadow-md -ml-4">
+    <div className="w-full h-28 absolute -top-16 bg-white shadow-md left-0 z-50">
       <h1 className={`text-2xl p-6 font-semibold font-header ${isBouncing ? 'animate-bounce' : ''}`}>
         {count} selected
       </h1>
