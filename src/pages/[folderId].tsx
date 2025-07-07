@@ -350,7 +350,7 @@ export default function ViewFolder() {
               Aww, this folder's empty.
             </p>
           ) : (
-            <div className="note-container mb-20">
+            <div className="note-container md:mb-0 mb-20">
               {normalNotes.map((note: Note) => (
                 <NoteItem
                   key={note.id}
