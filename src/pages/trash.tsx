@@ -214,7 +214,7 @@ if (isloading) {
               The trash was just taken out.
             </p>
           ) : (
-            <div className="note-container">
+            <div className="note-container -mt-11">
               {trashNotes.map((note) => (
                 <div key={note.id} className="">
                   <NoteItem
@@ -232,7 +232,7 @@ if (isloading) {
         </div>
 
         {isMultiSelect && (
-          <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
+          <div className="bg-white rounded-xl w-fit h-fit md:absolute sticky md:bottom-2 right-10 bottom-0 ring-2 drop-shadow-md p-2 z-20">
             <button
               className="mx-3 scale-150"
               onClick={handleDeleteSelectedNotes}

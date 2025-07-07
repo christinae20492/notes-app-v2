@@ -35,19 +35,14 @@ export interface Note {
   }
   
   export interface NewFolder {
-    id: string;
     title: string;
-    dateCreated: string;
-    notes: Note[];
   }
 
   export interface NewNote {
-    dateDeleted: string;
-    id: string;
     title: string;
     body: string;
     color: string;
     category: string;
     tag: string;
-    dateCreated: string;
+    folderId?: string;
   }

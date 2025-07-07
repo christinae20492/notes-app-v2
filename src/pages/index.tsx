@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleCheck,
+  faFolderPlus,
   faShuffle,
   faThumbtack,
   faTrashCan,
@@ -72,7 +73,6 @@ export default function Index() {
   };
 
   useEffect(() => {
-    getServerSideProps;
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
@@ -229,11 +229,12 @@ export default function Index() {
   };
 
   if (isloading) {
-    return <div>{loading()}</div>
+    return <div>{loading()}</div>;
   }
 
   return (
     <SessionProviderWrapper>
+      {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
       <Layout
         isMultiSelect={isMultiSelect}
         setIsMultiSelect={setIsMultiSelect}
@@ -245,7 +246,6 @@ export default function Index() {
           <title>VaultNotes - Home</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
-        {isMultiSelect && <MultiSelectCounter selectedNotes={selectedNotes} />}
 
         {searchBar && <SearchBar setNotes={setNotes} isHomePage={true} />}
 
@@ -318,7 +318,7 @@ export default function Index() {
               No notes available. Add a note to get started!
             </p>
           ) : (
-            <div className="note-container">
+            <div className="note-container md:mb-0 mb-20">
               {regularNotes.map((note) => (
                 <NoteItem
                   key={note.id}
@@ -334,12 +334,12 @@ export default function Index() {
         </div>
 
         {isMultiSelect && (
-          <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
+          <div className="bg-white rounded-xl w-fit h-fit md:absolute sticky md:bottom-2 right-10 bottom-24 ring-2 drop-shadow-md p-2 z-20">
             <button className="mx-3 scale-150" onClick={handleTrashNotes}>
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <button className="mx-3 scale-150" onClick={handleAddNotes}>
-              <FontAwesomeIcon icon={faShuffle} />
+              <FontAwesomeIcon icon={faFolderPlus} />
             </button>
             <button
               className="mx-3 scale-150"

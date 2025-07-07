@@ -24,7 +24,7 @@ export const getAllFolders = async (session: any, status: string): Promise<Folde
     }
 
     const data: Folder[] = await response.json();
-    successToast("Folders loaded successfully!");
+    //successToast("Folders loaded successfully!");
     return data;
   } catch (err: any) {
     console.error("Error fetching folders:", err);
@@ -53,7 +53,7 @@ export const getFolderNotes = async (id: string, session: any, status: string): 
     }
 
     const data: Note[] = await response.json();
-    successToast("Notes loaded successfully!");
+    //successToast("Notes loaded successfully!");
     return data;
   } catch (err: any) {
     console.error("Error fetching notes:", err);

@@ -1,5 +1,5 @@
 import { useSession } from "next-auth/react";
-import { EditNote, Note } from "./types";
+import { EditNote, NewNote, Note } from "./types";
 import { failToast, successToast, warnToast } from "./toast";
 import router from "next/router";
 
@@ -24,7 +24,7 @@ export const getAllNotes = async (session: any, status: string): Promise<Note[] 
     }
 
     const data: Note[] = await response.json();
-    successToast("Notes loaded successfully!");
+    //successToast("Notes loaded successfully!");
     return data;
   } catch (err: any) {
     console.error("Error fetching notes:", err);
@@ -53,7 +53,7 @@ export const getTrashNotes = async (session: any, status: string): Promise<Note[
     }
 
     const data: Note[] = await response.json();
-    successToast("Notes loaded successfully!");
+    //successToast("Notes loaded successfully!");
     return data;
   } catch (err: any) {
     console.error("Error fetching notes:", err);
@@ -63,12 +63,9 @@ export const getTrashNotes = async (session: any, status: string): Promise<Note[
 };
 
 export const createNewNote = async (
-  title: string,
-  body: string,
-  color: string,
-  category: string,
+  noteData: NewNote,
   session: any,
-  status: string
+  status: string,
 ): Promise<boolean> => {
   if (status === "loading") {
     warnToast("Authentication status is still loading. Please wait.");
@@ -80,18 +77,10 @@ export const createNewNote = async (
     return false;
   }
 
-  if (!title.trim() || !body.trim()) {
+  if (!noteData.title.trim() || !noteData.body.trim()) {
     warnToast("Title and body cannot be empty.");
     return false;
   }
-
-  const noteData = {
-    title,
-    body,
-    color,
-    category,
-    tag: "none",
-  };
 
   try {
     const response = await fetch("/api/note", {

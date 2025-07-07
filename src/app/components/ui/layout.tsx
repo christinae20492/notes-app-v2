@@ -55,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   useEffect(() => {
     verify();
-  }, [status]);
+  }, [status, session]);
 
   const verify = async () => {
     if (status === "unauthenticated") {
@@ -67,7 +67,6 @@ const Layout: React.FC<LayoutProps> = ({
     }
   };
 
-  if (status === "authenticated") {
     return (
       <div className="flex flex-col h-screen w-screen bg-vague"> 
         <header className="bg-white md:h-16 h-8 flex items-center justify-between p-5 shadow-sm fixed top-0 left-0 w-full z-20">
@@ -152,7 +151,7 @@ const Layout: React.FC<LayoutProps> = ({
             {children}
           </main>
 
-          <nav className="bg-gray-200 w-full flex flex-row justify-around fixed -bottom-4 left-0 h-20 shadow-md md:hidden visible">
+          <nav className="bg-gray-200 w-full flex flex-row justify-evenly fixed -bottom-4 left-0 h-20 shadow-md md:hidden visible">
             <Link href="/createnote" className="mobile-icon cursor-pointer">
               <FontAwesomeIcon icon={faPlus} />
               <br />
@@ -200,8 +199,6 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </div>
     );
-  }
-  return null;
 };
 
 

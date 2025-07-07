@@ -16,16 +16,16 @@ datasource db {
 
 model Account {
   id                String  @id @default(uuid()) @db.Uuid
-  userId            String @db.Uuid
-  type              String  
-  provider          String 
-  providerAccountId String 
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
   refresh_token     String? @db.Text
   access_token      String? @db.Text
-  expires_at        Int?  
+  expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text 
+  id_token          String? @db.Text
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -33,14 +33,13 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-
 model Session {
   id           String   @id @default(uuid()) @db.Uuid
-  sessionToken String   @unique 
+  sessionToken String   @unique
   userId       String   @db.Uuid
   expires      DateTime
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -52,15 +51,15 @@ model VerificationToken {
 }
 
 model User {
-
-  id        String      @id @default(uuid()) @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now())
   email     String   @unique
-  username      String @unique
-  password String
-  notes        Note[]
-  folders      Folder[]
-
+  username  String   @unique
+  password  String
+  sort      String   @default("")
+  darkMode  Boolean  @default(false)
+  notes     Note[]
+  folders   Folder[]
 
   session Session[]
 
@@ -68,36 +67,36 @@ model User {
 }
 
 model Folder {
-  id           String    @id @default(uuid()) @db.Uuid
-  title        String
-  dateCreated  DateTime  @default(now())
-  dateUpdated  DateTime  @updatedAt 
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  dateCreated DateTime @default(now())
+  dateUpdated DateTime @updatedAt
 
-  userId       String    @db.Uuid 
-  user         User      @relation(fields: [userId], references: [id])
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
 
-  notes        Note[]   
+  notes Note[]
 
   @@unique([title, userId])
 }
 
 model Note {
-  id           String    @id @default(uuid()) @db.Uuid
-  title        String
-  body         String
-  color        String
-  category     String
-  tag          String
-  dateCreated  DateTime  @default(now())
-  dateUpdated  DateTime  @updatedAt
-  dateDeleted  DateTime?
-  isTrash      Boolean   @default(false)
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  body        String
+  color       String
+  category    String
+  tag         String
+  dateCreated DateTime  @default(now())
+  dateUpdated DateTime  @updatedAt
+  dateDeleted DateTime?
+  isTrash     Boolean   @default(false)
 
-  userId       String    @db.Uuid
-  user         User      @relation(fields: [userId], references: [id])
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
 
-  folderId     String?   @map("folder_id") @db.Uuid
-  folder       Folder?   @relation(fields: [folderId], references: [id])
+  folderId String? @map("folder_id") @db.Uuid
+  folder   Folder? @relation(fields: [folderId], references: [id])
 
   @@unique([title, userId, folderId])
 }

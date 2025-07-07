@@ -19,7 +19,10 @@ export default function CreateNote() {
   const [newNote, setNewNote] = useState("");
   const [category, setCategory] = useState("Personal");
   const [bodyHeight, setBodyHeight] = useState(40);
+
   const router = useRouter();
+     const { folderId: queryFolderId } = router.query;
+  const actualFolderId = Array.isArray(queryFolderId) ? queryFolderId[0] : queryFolderId;
   const [isInvalid, setIsInvalid] = useState(false);
 
   const [isMultiSelect, setIsMultiSelect] = useState(false);
@@ -48,7 +51,16 @@ export default function CreateNote() {
       return;
     }
 
-    await createNewNote(title, body, color, category, session, status);
+    const data = {
+      title,
+      body,
+      color,
+      category,
+      tag: "none",
+      folderId: actualFolderId || undefined
+    }
+
+    await createNewNote(data, session, status);
     router.push("/");
   };
 

@@ -10,6 +10,7 @@ import {
   faMinus,
   faThumbtack,
   faCircleCheck,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { failToast, successToast, warnToast } from "@/app/utils/toast";
@@ -33,6 +34,7 @@ import {
 import loading from "@/app/components/ui/loading";
 import { getServerSideProps } from "@/app/middleware";
 import Head from "next/head";
+import Link from "next/link";
 
 export default function ViewFolder() {
   const router = useRouter();
@@ -58,15 +60,13 @@ export default function ViewFolder() {
   const [isloading, setLoading] = useState(false);
   const { data: session, status } = useSession();
 
-    useEffect(() => {
-    //getServerSideProps;
+  useEffect(() => {
     if (status === "loading") return;
 
     if (status === "unauthenticated") {
-      signIn()
+      signIn();
     }
-  }, [status, router]);
-
+  }, [status, session, router]);
 
   const findAndFetchFolder = async () => {
     if (status === "loading" || !folderId) {
@@ -171,12 +171,11 @@ export default function ViewFolder() {
     setLoading(false);
   };
 
-
   //const handleRenameFolder = (e: KeyboardEvent<HTMLInputElement>) => {
-    //if (e.key === "Enter" && typeof folderId === "string") {
-     // renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
-   // }
- // };
+  //if (e.key === "Enter" && typeof folderId === "string") {
+  // renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+  // }
+  // };
 
   const handleMultiPin = async (session: any, status: any) => {
     if (isMultiSelect) {
@@ -212,23 +211,23 @@ export default function ViewFolder() {
   };
 
   //const handleRenameFolderKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    //if (e.key === "Enter" && typeof folderId === "string") {
-      //renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+  //if (e.key === "Enter" && typeof folderId === "string") {
+  //renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
   //  }
   //};
 
   //const handleRenameFolderBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-   // if (typeof folderId === "string") {
-    //  renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
-   // }
- // };
+  // if (typeof folderId === "string") {
+  //  renameFolder(folderId, folderTitle, setFolders, setIsEditingTitle);
+  // }
+  // };
 
   const handleMoveToTrash = () => {
     if (!folder) return null;
     setLoading(true);
     trashSelectedNotes(selectedNotes, session, status);
     setSelectedNotes([]);
-    setIsMultiSelect(false)
+    setIsMultiSelect(false);
     getFolderNotes(folder.id, session, status).then((data) =>
       setNotes(Array.isArray(data) ? data : [])
     );
@@ -280,9 +279,9 @@ export default function ViewFolder() {
         setRefresh={setRefresh}
       >
         <Head>
-        <title>VaultNotes - {folderTitle}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
+          <title>VaultNotes - {folderTitle}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
         <div className="bg-white top-28 md:left-24 left-0 h-12 md:w-[calc(100%-6rem)] w-full md:fixed p-3 text-center shadow-md">
           <h1
             className="text-2xl font-header shadow-sm"
@@ -317,15 +316,20 @@ export default function ViewFolder() {
           >
             Add Notes
           </button>
+          <Link href={`/createnote?folderId=${folderId}`}>
+            <button className="button font-bold">
+              <FontAwesomeIcon icon={faPlus} />
+            </button>
+          </Link>
         </div>
 
-        <div className="md:mt-16 mt-4 max-h-1/2 w-3/4 p-4 justify-around block">
+        <div className="max-h-1/2 md:w-3/4 w-full p-1 justify-around block overflow-x-scroll">
           {pinnedNotes.length === 0 ? (
             <div className="hidden">
               <p>null</p>
             </div>
           ) : (
-            <div className="note-container">
+            <div className="note-container md:mt-28">
               {pinnedNotes.map((note: Note) => (
                 <NoteItem
                   key={note.id}
@@ -340,13 +344,13 @@ export default function ViewFolder() {
           )}
         </div>
 
-        <div className="md:w-5/6 w-full max-h-5/6 md:p-5 p-2 justify-around md:inline block">
+        <div className="md:w-5/6 w-full max-h-2/3 md:p-5 justify-around md:inline block">
           {notes.length === 0 ? (
             <p className="text-lg text-gray-500 text-center font-body">
               Aww, this folder's empty.
             </p>
           ) : (
-            <div className="note-container">
+            <div className="note-container mb-20">
               {normalNotes.map((note: Note) => (
                 <NoteItem
                   key={note.id}
@@ -384,7 +388,10 @@ export default function ViewFolder() {
                   ))}
                 </div>
               </div>
-              <button className="button md:text-center md:w-1/4" onClick={handleAddNotes}>
+              <button
+                className="button md:text-center md:w-1/4"
+                onClick={handleAddNotes}
+              >
                 Add To Folder
               </button>
             </div>
@@ -392,21 +399,24 @@ export default function ViewFolder() {
         )}
 
         {isMultiSelect && (
-          <div className="bg-white rounded-xl min-w-5/6 min-h-6 float-right absolute bottom-4 right-6 ring-2 drop-shadow-md p-2">
+          <div className="bg-white rounded-xl w-fit h-fit md:absolute sticky md:bottom-2 right-10 bottom-24 ring-2 drop-shadow-md p-2 z-20">
             <button className="mx-3 scale-150" onClick={handleMoveToTrash}>
               <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <button className="mx-3 scale-150" onClick={handleRemoveNotes}>
               <FontAwesomeIcon icon={faMinus} />
             </button>
-            <button className="mx-3 scale-150" onClick={()=>handleMultiPin(session, status)}>
+            <button
+              className="mx-3 scale-150"
+              onClick={() => handleMultiPin(session, status)}
+            >
               <FontAwesomeIcon icon={faThumbtack} />
             </button>
             <button
               className={`mx-3 scale-150 ${
                 selectedNotes.length === notes.length ? "text-blue-500" : ""
               }`}
-              onClick={() => handleSelectAllNotes(folder.notes)}
+              onClick={() => handleSelectAllNotes(notes)}
             >
               <FontAwesomeIcon icon={faCircleCheck} />
             </button>

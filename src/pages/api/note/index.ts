@@ -6,48 +6,58 @@ import { authOptions } from "../auth/[...nextauth]";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession( req, res, authOptions );
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const session = await getServerSession(req, res, authOptions);
 
   if (!session) {
-    console.warn(`API: Unauthorized attempt to ${req.method} notes (no session).`);
-        console.log(req.headers)
-    return res.status(401).json({ message: 'Unauthorized: No active session.' });
+    console.warn(
+      `API: Unauthorized attempt to ${req.method} notes (no session).`
+    );
+    console.log(req.headers);
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: No active session." });
   }
 
   const userId = session.user.id;
   if (!userId) {
     console.error("API: User ID not found in session for authenticated user.");
-    return res.status(400).json({ message: 'User ID missing from session.' });
+    return res.status(400).json({ message: "User ID missing from session." });
   }
 
   switch (req.method) {
-
-    case 'GET':
+    case "GET":
       console.log(`API: User ${userId} is requesting all notes.`);
       try {
         const allNotes = await prisma.note.findMany({
           where: {
             userId: userId,
             isTrash: false,
-            folderId: null
+            folderId: null,
           },
           orderBy: {
-            dateCreated: 'desc',
+            dateCreated: "desc",
           },
         });
         return res.status(200).json(allNotes);
       } catch (error) {
         console.error("API: Error fetching notes:", error);
-        return res.status(500).json({ message: 'Internal server error while fetching notes.' });
+        return res
+          .status(500)
+          .json({ message: "Internal server error while fetching notes." });
       }
 
-    case 'POST':
+    case "POST":
       console.log(`API: User ${userId} is attempting to create a note.`);
-      const { title, body, color, category, tag } = req.body;
+      const { title, body, color, category, tag, folderId, folder } = req.body;
 
       if (!title || !body) {
-        return res.status(400).json({ message: 'Title and body are required.' });
+        return res
+          .status(400)
+          .json({ message: "Title and body are required." });
       }
 
       try {
@@ -58,20 +68,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             body,
             color,
             category,
-            tag: tag,
+            tag,
             userId: userId,
-            folderId: null,
+            folderId: folderId ? folderId : undefined,
             isTrash: false,
           },
         });
-        return res.status(201).json({ message: 'Note created successfully!', note: newNote });
+        return res
+          .status(201)
+          .json({ message: "Note created successfully!", note: newNote });
       } catch (error) {
         console.error("API: Error creating note:", error);
-        return res.status(500).json({ message: 'Failed to create note.' });
+        return res.status(500).json({ message: "Failed to create note." });
       }
 
     default:
-      res.setHeader('Allow', ['GET', 'POST']);
-      return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
+      res.setHeader("Allow", ["GET", "POST"]);
+      return res
+        .status(405)
+        .json({ message: `Method ${req.method} Not Allowed` });
   }
 }
