@@ -323,47 +323,49 @@ export default function ViewFolder() {
           </Link>
         </div>
 
-        <div className="max-h-1/2 md:w-3/4 w-full p-1 justify-around block overflow-x-scroll">
-          {pinnedNotes.length === 0 ? (
-            <div className="hidden">
-              <p>null</p>
-            </div>
-          ) : (
-            <div className="note-container md:mt-28">
-              {pinnedNotes.map((note: Note) => (
-                <NoteItem
-                  key={note.id}
-                  note={note}
-                  isSelected={selectedNotes.includes(note.id)}
-                  isPinned={true}
-                  isMultiSelect={isMultiSelect}
-                  onClick={handleNoteClick}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <section className="md:mt-20">
+          <div className="max-h-1/2 md:w-3/4 w-full p-1 justify-around block overflow-x-scroll">
+            {pinnedNotes.length === 0 ? (
+              <div className="hidden">
+                <p>null</p>
+              </div>
+            ) : (
+              <div className="note-container md:mt-28">
+                {pinnedNotes.map((note: Note) => (
+                  <NoteItem
+                    key={note.id}
+                    note={note}
+                    isSelected={selectedNotes.includes(note.id)}
+                    isPinned={true}
+                    isMultiSelect={isMultiSelect}
+                    onClick={handleNoteClick}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div className="md:w-5/6 w-full max-h-2/3 md:p-5 justify-around md:inline block">
-          {notes.length === 0 ? (
-            <p className="text-lg text-gray-500 text-center font-body">
-              Aww, this folder's empty.
-            </p>
-          ) : (
-            <div className="note-container md:mb-0 mb-20">
-              {normalNotes.map((note: Note) => (
-                <NoteItem
-                  key={note.id}
-                  note={note}
-                  isSelected={selectedNotes.includes(note.id)}
-                  isPinned={false}
-                  isMultiSelect={isMultiSelect}
-                  onClick={handleNoteClick}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+          <div className="md:w-5/6 w-full max-h-2/3 md:p-5 justify-around md:inline block">
+            {notes.length === 0 ? (
+              <p className="text-lg text-gray-500 text-center font-body">
+                Aww, this folder's empty.
+              </p>
+            ) : (
+              <div className="note-container md:mb-0 mb-20">
+                {normalNotes.map((note: Note) => (
+                  <NoteItem
+                    key={note.id}
+                    note={note}
+                    isSelected={selectedNotes.includes(note.id)}
+                    isPinned={false}
+                    isMultiSelect={isMultiSelect}
+                    onClick={handleNoteClick}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {noteModalVisible && (
           <div className="modal-backdrop">
