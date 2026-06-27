@@ -1,56 +1,37 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]';
-import prisma from '@/app/prisma';
+import { NextApiRequest, NextApiResponse } from "next";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PATCH') {
-    res.setHeader('Allow', ['PATCH']);
+  if (req.method !== "PATCH") {
+    res.setHeader("Allow", ["PATCH"]);
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const supabase = createSupabaseServerClient(req, res);
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
-    console.warn(`API: Unauthorized attempt to restore multiple notes (no session).`);
-    return res.status(401).json({ message: 'Unauthorized: No active session.' });
-  }
-
-  const userId = session.user.id;
-  if (!userId) {
-    console.error("API: User ID not found in session for authenticated user.");
-    return res.status(400).json({ message: 'User ID missing from session.' });
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized: No active session." });
   }
 
   const { noteIds } = req.body;
 
   if (!Array.isArray(noteIds) || noteIds.length === 0) {
-    return res.status(400).json({ message: 'An array of note IDs is required in the request body.' });
+    return res.status(400).json({ message: "An array of note IDs is required in the request body." });
   }
 
-  console.log(`API: User ${userId} is restoring notes with IDs [${noteIds.join(', ')}]`);
+  const { data, error } = await supabase
+    .from("notes")
+    .update({ is_trash: false, date_deleted: null })
+    .in("id", noteIds)
+    .eq("user_id", user.id)
+    .select();
 
-  try {
-    const { count } = await prisma.note.updateMany({
-      where: {
-        id: {
-          in: noteIds,
-        },
-        userId: userId,
-      },
-      data: {
-        isTrash: false,
-        dateDeleted: new Date(),
-        dateUpdated: new Date(),
-      },
-    });
-
-    return res.status(200).json({
-      message: `${count} notes restored successfully!`,
-      count: count,
-    });
-  } catch (error) {
-    console.error(`API: Error restoring multiple notes for user ${userId}:`, error);
-    return res.status(500).json({ message: 'Internal server error while restoring multiple notes.' });
+  if (error) {
+    console.error("API: Error restoring notes:", error);
+    return res.status(500).json({ message: "Internal server error while restoring notes." });
   }
+
+  const count = data?.length ?? 0;
+  return res.status(200).json({ message: `${count} notes restored successfully!`, count });
 }

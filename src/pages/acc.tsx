@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { signOut, useSession } from 'next-auth/react';
-import { updateUserProfile, changeUserPassword, UserProfileUpdates } from '@/app/utils/userapi'; // Adjust path
+import { supabase } from "../../utils/supabase";
+import { useAuth } from '@/app/contexts/auth';
+import { updateUserProfile, changeUserPassword, UserProfileUpdates } from '@/app/utils/userapi';
 import { successToast, failToast, warnToast } from '@/app/utils/toast';
 import Layout from '@/app/components/ui/layout'; // Assuming your layout wraps the page
 import loading from '@/app/components/ui/loading';
@@ -8,7 +9,7 @@ import router from 'next/router';
 import Head from 'next/head';
 
 export default function UserProfilePage() {
-  const { data: session, status } = useSession();
+  const { session, status } = useAuth();
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -70,17 +71,11 @@ export default function UserProfilePage() {
   };
 
   const handleSignOut = async () => {
-
     try {
-
-      const result = await signOut({ redirect: false});
-
-      if (result) {
-        successToast("You have been signed out.");
-        router.push("/auth/login");
-      }
+      await supabase.auth.signOut();
+      successToast("You have been signed out.");
+      router.push("/auth/login");
     } catch (error) {
-      failToast(`Error during sign out:, ${error}`);
       failToast("Failed to sign out. Please try again.");
     }
   };

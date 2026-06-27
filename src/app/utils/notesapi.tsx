@@ -1,4 +1,3 @@
-import { useSession } from "next-auth/react";
 import { EditNote, NewNote, Note } from "./types";
 import { failToast, successToast, warnToast } from "./toast";
 import router from "next/router";

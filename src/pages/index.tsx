@@ -33,8 +33,7 @@ import {
   unpinMultiNotes,
   updateNote,
 } from "@/app/utils/notesapi";
-import { signIn, useSession } from "next-auth/react";
-import { getServerSideProps } from "@/app/middleware";
+import { useAuth } from "@/app/contexts/auth";
 import {
   addMultiToFolder,
   createNewFolder,
@@ -66,17 +65,11 @@ export default function Index() {
   const regularNotes = notes?.filter((note) => note.tag !== "important") || [];
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const { data: session, status } = useSession();
-
-  const sleep = (ms: number) => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  };
+  const { session, status } = useAuth();
 
   useEffect(() => {
-    if (status === "loading") return;
-
     if (status === "unauthenticated") {
-      signIn();
+      router.push("/auth/login");
     }
   }, [status, router]);
 

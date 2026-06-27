@@ -1,14 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { v4 as uuidv4 } from "uuid";
-import prisma from "@/app/prisma";
-import { getSession } from "next-auth/react";
-import { authOptions } from "../../auth/[...nextauth]";
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { createSupabaseServerClient, mapNote } from "@/lib/supabase-server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
+  if (req.method !== "GET") {
+    res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 
@@ -16,40 +11,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const folderId = Array.isArray(queryFolderId) ? queryFolderId[0] : queryFolderId;
 
   if (!folderId) {
-    return res.status(400).json({ message: 'Folder ID is required in the URL path.' });
+    return res.status(400).json({ message: "Folder ID is required in the URL path." });
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const supabase = createSupabaseServerClient(req, res);
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
-    console.warn(`API: Unauthorized attempt to get notes from folder ${folderId} (no session).`);
-    return res.status(401).json({ message: 'Unauthorized: No active session.' });
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized: No active session." });
   }
 
-  const userId = session.user.id;
-  if (!userId) {
-    console.error("API: User ID not found in session for authenticated user.");
-    return res.status(400).json({ message: "User ID missing from session." });
-  }
+  const { data, error } = await supabase
+    .from("notes")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("folder_id", folderId)
+    .eq("is_trash", false)
+    .order("date_created", { ascending: false });
 
-  console.log(`API: User ${userId} is requesting notes from folder ${folderId}.`);
-
-  try {
-
-    const notesInFolder = await prisma.note.findMany({
-      where: {
-        userId: userId,
-        isTrash: false,
-        folderId: folderId, 
-      },
-      orderBy: {
-        dateCreated: "desc",
-      },
-    });
-
-    return res.status(200).json(notesInFolder);
-  } catch (error) {
+  if (error) {
     console.error(`API: Error fetching notes for folder ${folderId}:`, error);
     return res.status(500).json({ message: "Internal server error while fetching notes." });
   }
+
+  return res.status(200).json(data.map(mapNote));
 }

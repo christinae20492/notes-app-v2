@@ -1,13 +1,20 @@
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
+import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return parseCookieHeader(context.req.headers.cookie ?? "");
+        },
+        setAll() {},
+      },
+    }
+  );
 
-  console.log("Server-side session:", session);
-
-  return {
-    props: {},
-  };
+  const { data: { user } } = await supabase.auth.getUser();
+  return { props: { user: user ?? null } };
 }

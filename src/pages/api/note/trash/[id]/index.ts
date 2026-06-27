@@ -1,56 +1,37 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/pages/api/auth/[...nextauth]';
-import prisma from '@/app/prisma';
+import { NextApiRequest, NextApiResponse } from "next";
+import { createSupabaseServerClient, mapNote } from "@/lib/supabase-server";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
   const noteId = Array.isArray(id) ? id[0] : id;
 
   if (!noteId) {
-    return res.status(400).json({ message: 'Note ID is required.' });
+    return res.status(400).json({ message: "Note ID is required." });
   }
-
-  if (req.method !== 'PATCH') {
-    res.setHeader('Allow', ['PATCH']);
+  if (req.method !== "PATCH") {
+    res.setHeader("Allow", ["PATCH"]);
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const supabase = createSupabaseServerClient(req, res);
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
-    console.warn(`API: Unauthorized attempt to trash note (no session). Note ID: ${noteId}`);
-    return res.status(401).json({ message: 'Unauthorized: No active session.' });
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized: No active session." });
   }
 
-  const userId = session.user.id;
-  if (!userId) {
-    console.error("API: User ID not found in session for authenticated user.");
-    return res.status(400).json({ message: 'User ID missing from session.' });
+  const { data, error } = await supabase
+    .from("notes")
+    .update({ is_trash: true, date_deleted: new Date().toISOString() })
+    .eq("id", noteId)
+    .eq("user_id", user.id)
+    .eq("is_trash", false)
+    .select()
+    .single();
+
+  if (error || !data) {
+    return res.status(404).json({ message: "Note not found or you do not have access to trash." });
   }
 
-  console.log(`API: User ${userId} is moving note ${noteId} to trash.`);
-
-  try {
-    const trashedNote = await prisma.note.update({
-      where: {
-        id: noteId,
-        userId: userId,
-        isTrash: false,
-      },
-      data: {
-        isTrash: true,
-        dateDeleted: new Date(),
-        dateUpdated: new Date(),
-      },
-    });
-
-    return res.status(200).json({ message: 'Note moved to trash successfully!', note: trashedNote });
-  } catch (error: any) {
-    if (error.code === 'P2025') {
-      return res.status(404).json({ message: 'Note not found or you do not have access to trash.' });
-    }
-    console.error(`API: Error trashing note ${noteId}:`, error);
-    return res.status(500).json({ message: 'Internal server error while trashing note.' });
-  }
+  return res.status(200).json({ message: "Note moved to trash successfully!", note: mapNote(data) });
 }

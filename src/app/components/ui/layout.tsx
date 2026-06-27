@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowUpShortWide,
   faCircleCheck,
   faHouse,
   faMagnifyingGlass,
@@ -14,10 +13,8 @@ import {
   faUserGear,
 } from "@fortawesome/free-solid-svg-icons";
 import "@/app/tailwind.css";
-import { useSession, signIn } from "next-auth/react";
-import loading from "./loading";
-import { warnToast } from "@/app/utils/toast";
-import { toggleTheme } from "@/app/utils/theme";
+import { useAuth } from "@/app/contexts/auth";
+import { useRouter } from "next/router";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -40,32 +37,14 @@ const Layout: React.FC<LayoutProps> = ({
   setShowSettings,
   setRefresh,
 }) => {
-  const { data: session, status } = useSession();
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const { status } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setIsDarkTheme(savedTheme === "dark");
-  }, []);
-
-  const handleToggleTheme = () => {
-    toggleTheme();
-    setIsDarkTheme((prev) => !prev);
-  };
-
-  useEffect(() => {
-    verify();
-  }, [status, session]);
-
-  const verify = async () => {
     if (status === "unauthenticated") {
-      await signIn("credentials", {
-        redirect: false,
-      });
-    } else if (status === "loading" || !session) {
-      return <div>{loading()}</div>;
+      router.push("/auth/login");
     }
-  };
+  }, [status, router]);
 
     return (
       <div className="flex flex-col h-screen w-screen bg-vague"> 

@@ -1,3 +1,7 @@
+import { supabase } from "../../../utils/supabase";
+import { warnToast, failToast, successToast } from "./toast";
+import { AuthSession } from "@/app/contexts/auth";
+
 export interface UserProfileUpdates {
   username?: string;
   email?: string;
@@ -8,13 +12,9 @@ interface PasswordChangeData {
   newPassword: string;
 }
 
-import { Session } from 'next-auth';
-import { signOut} from 'next-auth/react';
-import { warnToast, failToast, successToast } from './toast';
-
 export const updateUserProfile = async (
   updates: UserProfileUpdates,
-  session: Session | null,
+  session: AuthSession | null,
   status: string
 ): Promise<boolean> => {
   if (status === "loading") {
@@ -31,11 +31,11 @@ export const updateUserProfile = async (
   }
 
   try {
-    const response = await fetch('/api/user/update', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/user/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
-      credentials: 'include',
+      credentials: "include",
     });
 
     const result = await response.json();
@@ -43,7 +43,7 @@ export const updateUserProfile = async (
     if (response.ok) {
       successToast(result.message || "Profile updated successfully!");
       if (updates.username || updates.email) {
-        await signOut();
+        await supabase.auth.signOut();
       }
       return true;
     } else {
@@ -59,7 +59,7 @@ export const updateUserProfile = async (
 
 export const changeUserPassword = async (
   data: PasswordChangeData,
-  session: Session | null,
+  session: AuthSession | null,
   status: string
 ): Promise<boolean> => {
   if (status === "loading") {
@@ -76,14 +76,14 @@ export const changeUserPassword = async (
   }
 
   try {
-    const response = await fetch('/api/user/update', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/user/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       }),
-      credentials: 'include',
+      credentials: "include",
     });
 
     const result = await response.json();

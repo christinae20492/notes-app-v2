@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { successToast, failToast } from "@/app/utils/toast";
+import { failToast } from "@/app/utils/toast";
 import "@/app/tailwind.css";
-import { getServerSideProps } from "@/app/middleware";
+import { supabase } from "../../../utils/supabase";
+import { useAuth } from "@/app/contexts/auth";
 
 const SignInPage: React.FC = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
-
-  const sleep = (ms: number) => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  };
+  const { status } = useAuth();
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (status === "authenticated") {
+      router.push("/");
+    }
   }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,20 +30,28 @@ const SignInPage: React.FC = () => {
     }
 
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
-        usernameOrEmail,
-        password,
-        callbackUrl: "/",
-      });
+      let email = usernameOrEmail.trim().toLowerCase();
 
-      if (result?.error) {
-        failToast("Invalid credentials. Please try again.");
-      } else if (result?.ok || session) {
-        router.push("/");
-        if (session) {
-        successToast("Welcome back, " + session.user.username);
+      // If a username was entered (no @), look up the associated email
+      if (!email.includes("@")) {
+        const { data: foundEmail, error: rpcError } = await supabase.rpc(
+          "get_email_by_username",
+          { input_username: email }
+        );
+        if (rpcError || !foundEmail) {
+          failToast("Invalid credentials. Please try again.");
+          setIsLoading(false);
+          return;
         }
+        email = foundEmail as string;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        failToast("Invalid credentials. Please try again.");
+      } else {
+        router.push("/");
       }
     } catch (error) {
       console.error("An unexpected error occurred during sign-in:", error);

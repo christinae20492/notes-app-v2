@@ -1,27 +1,14 @@
-import { getServerSideProps } from "@/app/middleware";
-import { Session } from "next-auth";
-import { SessionProvider, signIn, useSession } from "next-auth/react";
+import { AuthProvider } from "@/app/contexts/auth";
 import type { AppProps } from "next/app";
-import router from "next/router";
-import React, { useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import React from "react";
+import { ToastContainer } from "react-toastify";
 
-interface CustomAppProps extends AppProps {
-  pageProps: AppProps['pageProps'] & {
-    session: Session | null;
-    status?: string;
-  };
-}
-
-
-function NotesApp({ Component, pageProps }: CustomAppProps) {
-  const { session, status, ...restPageProps } = pageProps;
-
+function NotesApp({ Component, pageProps }: AppProps) {
   return (
-    <SessionProvider session={session}>
+    <AuthProvider>
       <ToastContainer />
       <Component {...pageProps} />
-    </SessionProvider>
+    </AuthProvider>
   );
 }
 

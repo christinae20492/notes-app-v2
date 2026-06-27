@@ -1,91 +1,63 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { v4 as uuidv4 } from "uuid";
-import prisma from "@/app/prisma";
-import { getSession } from "next-auth/react";
-import { authOptions } from "../auth/[...nextauth]";
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { createSupabaseServerClient, mapNote } from "@/lib/supabase-server";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const session = await getServerSession(req, res, authOptions);
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const supabase = createSupabaseServerClient(req, res);
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) {
-    console.warn(
-      `API: Unauthorized attempt to ${req.method} notes (no session).`
-    );
-    console.log(req.headers);
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: No active session." });
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized: No active session." });
   }
 
-  const userId = session.user.id;
-  if (!userId) {
-    console.error("API: User ID not found in session for authenticated user.");
-    return res.status(400).json({ message: "User ID missing from session." });
-  }
+  const userId = user.id;
 
   switch (req.method) {
-    case "GET":
-      console.log(`API: User ${userId} is requesting all notes.`);
-      try {
-        const allNotes = await prisma.note.findMany({
-          where: {
-            userId: userId,
-            isTrash: false,
-            folderId: null,
-          },
-          orderBy: {
-            dateCreated: "desc",
-          },
-        });
-        return res.status(200).json(allNotes);
-      } catch (error) {
+    case "GET": {
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("is_trash", false)
+        .is("folder_id", null)
+        .order("date_created", { ascending: false });
+
+      if (error) {
         console.error("API: Error fetching notes:", error);
-        return res
-          .status(500)
-          .json({ message: "Internal server error while fetching notes." });
+        return res.status(500).json({ message: "Internal server error while fetching notes." });
       }
+      return res.status(200).json(data.map(mapNote));
+    }
 
-    case "POST":
-      console.log(`API: User ${userId} is attempting to create a note.`);
-      const { title, body, color, category, tag, folderId, folder } = req.body;
-
+    case "POST": {
+      const { title, body, color, category, tag, folderId } = req.body;
       if (!title || !body) {
-        return res
-          .status(400)
-          .json({ message: "Title and body are required." });
+        return res.status(400).json({ message: "Title and body are required." });
       }
 
-      try {
-        const newNote = await prisma.note.create({
-          data: {
-            id: uuidv4(),
-            title,
-            body,
-            color,
-            category,
-            tag,
-            userId: userId,
-            folderId: folderId ? folderId : undefined,
-            isTrash: false,
-          },
-        });
-        return res
-          .status(201)
-          .json({ message: "Note created successfully!", note: newNote });
-      } catch (error) {
+      const { data, error } = await supabase
+        .from("notes")
+        .insert({
+          title,
+          body,
+          color: color ?? "",
+          category: category ?? "",
+          tag: tag ?? "none",
+          user_id: userId,
+          folder_id: folderId ?? null,
+          is_trash: false,
+        })
+        .select()
+        .single();
+
+      if (error) {
         console.error("API: Error creating note:", error);
         return res.status(500).json({ message: "Failed to create note." });
       }
+      return res.status(201).json({ message: "Note created successfully!", note: mapNote(data) });
+    }
 
     default:
       res.setHeader("Allow", ["GET", "POST"]);
-      return res
-        .status(405)
-        .json({ message: `Method ${req.method} Not Allowed` });
+      return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   }
 }
